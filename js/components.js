@@ -26,8 +26,7 @@ const NAV_HTML = `
     </li>
     <li><a href="${MERCH_URL}" target="_blank">Merch</a></li>
     <li><a href="clients.html">Clients</a></li>
-    <li><a href="clients.html">Clients</a>
-          <a href="contact.html">Contact</a></li>
+    <li><a href="contact.html">Contact</a></li>
     <li><a href="${PORTAL_URL}" target="_blank" class="nav-cta">Log In</a></li>
   </ul>
 </nav>`;
