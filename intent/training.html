@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training — Intent Athletics</title>
+  <meta name="description" content="Adult training, athlete training, youth training, and semi-private sessions on Long Island, NY. Every program built around you.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .training-intro {
+      padding: 5rem 2.5rem 4rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--off);
+    }
+    .training-intro h1 {
+      font-family: var(--font-display);
+      font-size: clamp(40px,6vw,68px);
+      font-weight: 400; color: var(--ink);
+      line-height: 1.05; margin-bottom: 1.2rem;
+    }
+    .training-intro h1 em { font-style: italic; color: var(--ink-3); }
+    .training-intro p { font-size:16px; color:var(--ink-3); max-width:500px; line-height:1.8; font-weight:300; }
+
+    .program-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      min-height: 380px;
+    }
+    .program-block:nth-child(even) .prog-text { order: 2; }
+    .program-block:nth-child(even) .prog-detail { order: 1; }
+
+    .prog-text {
+      padding: 4.5rem 3rem 4.5rem 2.5rem;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .program-block:nth-child(even) .prog-text {
+      border-right: none;
+      border-left: 1px solid var(--border);
+      padding: 4.5rem 2.5rem 4.5rem 3rem;
+    }
+
+    .prog-num {
+      font-family: var(--font-display);
+      font-size: 72px; color: var(--border);
+      line-height: 1; margin-bottom: 0.3rem;
+    }
+
+    .prog-text h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px,4vw,44px);
+      font-weight: 400; color: var(--ink);
+      line-height: 1.1; margin-bottom: 1.2rem;
+    }
+    .prog-text h2 em { font-style: italic; color: var(--ink-3); }
+    .prog-text p { font-size:14px; color:var(--ink-3); line-height:1.85; margin-bottom:1rem; font-weight:300; }
+
+    .prog-detail {
+      background: var(--off);
+      padding: 4.5rem 2.5rem;
+      display: flex; flex-direction: column;
+      gap: 12px; justify-content: center;
+    }
+
+    .detail-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.2rem 1.5rem;
+    }
+    .detail-label {
+      font-size: 9px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--ink-4); margin-bottom: 4px;
+    }
+    .detail-val { font-size: 13px; color: var(--ink); line-height: 1.55; }
+
+    .cta-section { padding:5.5rem 2.5rem; text-align:center; }
+    .cta-section h2 { font-family:var(--font-display); font-size:clamp(28px,4vw,50px); font-weight:400; color:var(--ink); line-height:1.1; margin-bottom:0.8rem; }
+    .cta-section h2 em { font-style:italic; color:var(--ink-3); }
+    .cta-section p { font-size:15px; color:var(--ink-3); margin-bottom:2rem; font-weight:300; }
+
+    @media(max-width:768px){
+      .training-intro { padding:3rem 1.25rem; }
+      .program-block { grid-template-columns:1fr; }
+      .prog-text,.program-block:nth-child(even) .prog-text { padding:3rem 1.25rem; border:none; border-bottom:1px solid var(--border); order:1; }
+      .prog-detail,.program-block:nth-child(even) .prog-detail { padding:2.5rem 1.25rem; order:2; }
+      .cta-section { padding:4rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<main>
+  <div class="training-intro">
+    <span class="eyebrow">Training</span>
+    <h1>Programs built<br>around <em>you.</em></h1>
+    <p>Four ways to work with John — all of them individualized, all of them built for where you actually are right now.</p>
+  </div>
+
+  <div class="program-block">
+    <div class="prog-text">
+      <div class="prog-num">01</div>
+      <h2>Adult <em>Training</em></h2>
+      <p>One-on-one sessions with John. Your program, your pace, his full attention every session. The most direct path to your goals.</p>
+      <p>Available for all fitness levels and backgrounds — beginners, returning clients, and anyone working toward a specific goal.</p>
+      <a href="training/adult-training.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+    </div>
+    <div class="prog-detail">
+      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person</div></div>
+      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Adults of all fitness levels and ages</div></div>
+      <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Custom programming · Coaching · Nutrition</div></div>
+    </div>
+  </div>
+
+  <div class="program-block">
+    <div class="prog-text">
+      <div class="prog-num">02</div>
+      <h2>Athlete <em>Training</em></h2>
+      <p>Performance programming for competitive and collegiate athletes. Built around your sport, your position, and your season.</p>
+      <p>John has trained athletes at the youth, collegiate, and professional level — the program accounts for what you're already doing.</p>
+      <a href="training/athlete-training.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+    </div>
+    <div class="prog-detail">
+      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person</div></div>
+      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Competitive athletes — youth through professional</div></div>
+      <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Sport-specific programming · Strength &amp; conditioning</div></div>
+    </div>
+  </div>
+
+  <div class="program-block">
+    <div class="prog-text">
+      <div class="prog-num">03</div>
+      <h2>Youth <em>Training</em></h2>
+      <p>Building real movement foundations for young athletes — the kind that make them better in any sport and protect them as they grow.</p>
+      <p>Programs designed specifically for youth, not scaled-down adult workouts. John has worked with young athletes since day one.</p>
+      <a href="training/youth-training.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+    </div>
+    <div class="prog-detail">
+      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person</div></div>
+      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Young athletes from age 7 and up</div></div>
+      <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Movement fundamentals · Age-appropriate strength training</div></div>
+    </div>
+  </div>
+
+  <div class="program-block">
+    <div class="prog-text">
+      <div class="prog-num">04</div>
+      <h2>Semi-Private <em>Training</em></h2>
+      <p>Train alongside 2–3 people. Everyone has their own individualized program — shared session, accessible price point.</p>
+      <p>This is not a group class. Each person trains their own program. Great for friends or training partners.</p>
+      <a href="training/semi-private.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+    </div>
+    <div class="prog-detail">
+      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">Small group — 2 to 3 people</div></div>
+      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Friends, partners, or anyone wanting an individualized program at a shared price</div></div>
+      <div class="detail-card"><div class="detail-label">Note</div><div class="detail-val">Everyone trains their own program — not a group class</div></div>
+    </div>
+  </div>
+
+  <section class="cta-section">
+    <span class="eyebrow">Get started</span>
+    <h2>Not sure which <em>option is right?</em></h2>
+    <p>Just reach out. John will help you find the best fit.</p>
+    <a href="contact.html" class="btn btn-primary" style="font-size:15px;padding:14px 34px;">Get in touch</a>
+  </section>
+</main>
+<div id="footer-placeholder"></div>
+<script src="js/components.js"></script>
+</body>
+</html>

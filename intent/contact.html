@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact — Intent Athletics</title>
+  <meta name="description" content="Get in touch with John Dunlop at Intent Athletics. Personal training on Long Island, NY.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .contact-header {
+      padding: 5rem 2.5rem 4rem;
+      background: var(--off);
+      border-bottom: 1px solid var(--border);
+    }
+    .contact-header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(44px,6vw,72px);
+      font-weight: 400; color: var(--ink);
+      line-height: 1.05;
+    }
+    .contact-header h1 em { font-style: italic; color: var(--ink-3); }
+
+    .contact-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-side {
+      padding: 5rem 3rem 5rem 2.5rem;
+      border-right: 1px solid var(--border);
+    }
+
+    .form-side h2 {
+      font-family: var(--font-display);
+      font-size: clamp(26px,3.5vw,40px);
+      font-weight: 400; color: var(--ink);
+      line-height: 1.1; margin-bottom: 0.7rem;
+    }
+    .form-side h2 em { font-style: italic; color: var(--ink-3); }
+    .form-side > p { font-size:14px; color:var(--ink-3); line-height:1.8; margin-bottom:2.5rem; font-weight:300; }
+
+    .form-group { margin-bottom: 1.4rem; }
+    .form-group label {
+      display: block; font-size: 10px; font-weight: 500;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      color: var(--ink-4); margin-bottom: 7px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%; background: var(--off);
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--ink); font-family: var(--font-body);
+      font-size: 14px; font-weight: 300;
+      padding: 12px 16px; outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-appearance: none; appearance: none;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: var(--ink-3); background: var(--white); }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder { color: var(--ink-4); }
+    .form-group textarea { min-height: 130px; resize: vertical; line-height: 1.65; }
+    .form-group select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23a8a5a1' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center; padding-right: 40px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .submit-btn {
+      width: 100%; background: var(--ink); color: var(--white);
+      font-family: var(--font-body); font-size: 14px; font-weight: 500;
+      padding: 14px; border: none; border-radius: var(--radius-pill);
+      cursor: pointer; transition: background 0.2s; margin-top: 0.5rem;
+    }
+    .submit-btn:hover { background: var(--ink-2); }
+
+    .form-note { font-size: 12px; color: var(--ink-4); margin-top: 1rem; text-align: center; }
+
+    .success-banner {
+      display: none;
+      background: #f0f7e8; border: 1.5px solid #c0dfa0;
+      border-radius: var(--radius-sm); padding: 1.2rem 1.4rem;
+      margin-top: 1rem; font-size: 14px; color: var(--green);
+      text-align: center;
+    }
+
+    .info-side {
+      padding: 5rem 2.5rem;
+      background: var(--off);
+      display: flex; flex-direction: column; gap: 0;
+      justify-content: flex-start;
+    }
+
+    .info-item {
+      padding: 1.4rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-item:first-child { border-top: 1px solid var(--border); }
+    .info-label {
+      font-size: 9px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--ink-4); margin-bottom: 5px;
+    }
+    .info-val { font-size: 14px; color: var(--ink); line-height: 1.6; }
+    .info-val a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--border-mid); transition: border-color 0.2s; }
+    .info-val a:hover { border-color: var(--ink-3); }
+
+    .portal-card {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-card);
+      padding: 1.8rem; margin-top: 1.5rem;
+    }
+    .portal-card-label { font-size: 9px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase; color: var(--ink-4); margin-bottom: 0.7rem; }
+    .portal-card h3 { font-family: var(--font-display); font-size: 20px; font-weight: 400; color: var(--ink); margin-bottom: 0.6rem; }
+    .portal-card p { font-size: 13px; color: var(--ink-3); line-height: 1.75; margin-bottom: 1.2rem; font-weight: 300; }
+
+    @media(max-width:900px){
+      .contact-header { padding: 3rem 1.25rem; }
+      .contact-layout { grid-template-columns: 1fr; }
+      .form-side { padding: 3rem 1.25rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .info-side { padding: 3rem 1.25rem; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<main>
+  <div class="contact-header">
+    <span class="eyebrow">Contact</span>
+    <h1>Get in <em>touch.</em></h1>
+  </div>
+
+  <div class="contact-layout">
+    <div class="form-side">
+      <h2>Send a <em>message</em></h2>
+      <p>Fill out the form and John will get back to you within a day or two to talk through the right fit.</p>
+      <form id="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="fname">First name</label>
+            <input type="text" id="fname" name="first_name" placeholder="John" required>
+          </div>
+          <div class="form-group">
+            <label for="lname">Last name</label>
+            <input type="text" id="lname" name="last_name" placeholder="Smith" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="you@email.com" required>
+        </div>
+        <div class="form-group">
+          <label for="phone">Phone <span style="font-weight:300;text-transform:none;letter-spacing:0;">(optional)</span></label>
+          <input type="tel" id="phone" name="phone" placeholder="(516) 555-0100">
+        </div>
+        <div class="form-group">
+          <label for="interest">Interested in</label>
+          <select id="interest" name="interest">
+            <option value="">Select a program</option>
+            <option value="adult">Adult Training</option>
+            <option value="athlete">Athlete Training</option>
+            <option value="youth">Youth Training</option>
+            <option value="semi-private">Semi-Private Training</option>
+            <option value="unsure">Not sure yet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="message">Your goals</label>
+          <textarea id="message" name="message" placeholder="A little about where you are and what you're looking to work on…"></textarea>
+        </div>
+        <button type="submit" class="submit-btn">Send message</button>
+        <p class="form-note">John typically responds within 1–2 business days.</p>
+        <div class="success-banner" id="success-msg">Message sent — John will be in touch soon.</div>
+      </form>
+    </div>
+
+    <div class="info-side">
+      <div class="info-item">
+        <div class="info-label">Location</div>
+        <div class="info-val">Long Island, NY</div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Instagram</div>
+        <div class="info-val"><a href="https://www.instagram.com/intentathletics.li/" target="_blank">@intentathletics.li</a></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Merch</div>
+        <div class="info-val"><a href="https://wokeathleletics-fitness.itemorder.com/shop/home/" target="_blank">Intent Athletics store</a></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Response time</div>
+        <div class="info-val">Usually within 1–2 business days</div>
+      </div>
+      <div class="portal-card">
+        <div class="portal-card-label">Already a client?</div>
+        <h3>Your workouts are waiting.</h3>
+        <p>Log in to the client portal to access your training programs and stay in touch with John directly through the app.</p>
+        <a href="https://train.woke-af.com/users/sign_up.html" target="_blank" class="btn btn-outline" style="font-size:13px;padding:10px 22px;">Go to client portal →</a>
+      </div>
+    </div>
+  </div>
+</main>
+<div id="footer-placeholder"></div>
+<script src="js/components.js"></script>
+<script>
+  const form = document.getElementById('contact-form');
+  const success = document.getElementById('success-msg');
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const action = form.getAttribute('action');
+    if (action.includes('YOUR_FORM_ID')) {
+      success.style.display = 'block';
+      form.reset();
+      return;
+    }
+    const data = new FormData(form);
+    try {
+      const res = await fetch(action, { method:'POST', body:data, headers:{'Accept':'application/json'} });
+      if (res.ok) { success.style.display = 'block'; form.reset(); }
+    } catch(err) { success.style.display = 'block'; form.reset(); }
+  });
+</script>
+</body>
+</html>

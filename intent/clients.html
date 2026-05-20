@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients — Intent Athletics</title>
+  <meta name="description" content="Real clients, real results. Meet the people John Dunlop trains at Intent Athletics on Long Island, NY.">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .clients-header {
+      padding: 5rem 2.5rem 4rem;
+      background: var(--off);
+      border-bottom: 1px solid var(--border);
+    }
+    .clients-header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(44px,6vw,72px);
+      font-weight: 400; color: var(--ink); line-height: 1.05; margin-bottom: 1rem;
+    }
+    .clients-header h1 em { font-style: italic; color: var(--ink-3); }
+    .clients-header p { font-size: 16px; color: var(--ink-3); max-width: 500px; line-height: 1.8; font-weight: 300; }
+
+    /* FEATURED CLIENT — large format */
+    .featured-client {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      min-height: 520px;
+    }
+
+    .featured-photo {
+      position: relative; overflow: hidden;
+      background: var(--surface);
+    }
+
+    .featured-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      display: block;
+    }
+
+    /* Placeholder for when no photo is uploaded yet */
+    .photo-placeholder {
+      width: 100%; height: 100%; min-height: 400px;
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px;
+    }
+
+    .photo-placeholder-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--border); display: flex;
+      align-items: center; justify-content: center;
+    }
+
+    .photo-placeholder-text {
+      font-size: 12px; color: var(--ink-4);
+      letter-spacing: 1px; text-align: center;
+    }
+
+    .featured-content {
+      padding: 5rem 3rem 5rem 3.5rem;
+      display: flex; flex-direction: column; justify-content: center;
+      border-left: 1px solid var(--border);
+    }
+
+    .client-type-badge {
+      display: inline-block;
+      background: var(--green-bg);
+      color: var(--green);
+      font-size: 10px; font-weight: 500;
+      padding: 4px 12px; border-radius: var(--radius-pill);
+      margin-bottom: 1.5rem; letter-spacing: 0.5px;
+    }
+
+    .featured-content h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px,4vw,46px);
+      font-weight: 400; color: var(--ink);
+      line-height: 1.1; margin-bottom: 0.5rem;
+    }
+
+    .client-subtitle {
+      font-size: 12px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--ink-4); margin-bottom: 2rem;
+    }
+
+    .client-quote {
+      font-family: var(--font-display);
+      font-size: 20px; font-style: italic;
+      color: var(--ink-3); line-height: 1.55;
+      margin-bottom: 2rem;
+      padding-left: 1.5rem;
+      border-left: 2px solid var(--border-mid);
+    }
+
+    .client-detail-row {
+      display: flex; flex-direction: column; gap: 3px;
+      padding: 1rem 0; border-top: 1px solid var(--border);
+    }
+    .client-detail-label {
+      font-size: 9px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--ink-4);
+    }
+    .client-detail-val { font-size: 13px; color: var(--ink); }
+
+    /* GRID OF CLIENTS */
+    .clients-grid-section {
+      padding: 5rem 2.5rem;
+      background: var(--off);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .clients-grid-section h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px,3.5vw,42px);
+      font-weight: 400; color: var(--ink);
+      line-height: 1.1; margin-bottom: 2.5rem;
+    }
+    .clients-grid-section h2 em { font-style: italic; color: var(--ink-3); }
+
+    .clients-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .client-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .client-card:hover {
+      border-color: var(--border-mid);
+      transform: translateY(-2px);
+    }
+
+    .client-card-photo {
+      aspect-ratio: 4/5;
+      overflow: hidden;
+      background: var(--surface);
+      position: relative;
+    }
+
+    .client-card-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top;
+      display: block;
+    }
+
+    .client-card-body { padding: 1.5rem; }
+
+    .client-card-badge {
+      display: inline-block;
+      background: var(--surface);
+      color: var(--ink-4);
+      font-size: 9px; font-weight: 500;
+      padding: 3px 10px; border-radius: var(--radius-pill);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+
+    .client-card h3 {
+      font-family: var(--font-display);
+      font-size: 22px; font-weight: 400;
+      color: var(--ink); margin-bottom: 0.5rem;
+    }
+
+    .client-card-meta {
+      font-size: 11px; color: var(--ink-4);
+      letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+
+    .client-card-quote {
+      font-size: 13px; color: var(--ink-3);
+      line-height: 1.75; font-style: italic;
+      font-family: var(--font-display);
+    }
+
+    /* ADD CLIENT TEMPLATE CARD */
+    .client-card.add-template {
+      border: 1.5px dashed var(--border-mid);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 3rem 2rem; text-align: center;
+      min-height: 400px; cursor: default;
+    }
+
+    .add-template-icon {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: var(--surface); display: flex;
+      align-items: center; justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .add-template h3 {
+      font-family: var(--font-body);
+      font-size: 14px; font-weight: 500;
+      color: var(--ink-3); margin-bottom: 0.5rem;
+    }
+
+    .add-template p {
+      font-size: 12px; color: var(--ink-4);
+      line-height: 1.6;
+    }
+
+    /* TRAINING TYPES STRIP */
+    .type-strip {
+      padding: 4rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .type-strip h2 {
+      font-family: var(--font-display);
+      font-size: clamp(26px,3vw,38px);
+      font-weight: 400; color: var(--ink);
+      margin-bottom: 2rem; line-height: 1.1;
+    }
+    .type-strip h2 em { font-style: italic; color: var(--ink-3); }
+
+    .type-pills {
+      display: flex; flex-wrap: wrap; gap: 10px;
+    }
+
+    .type-pill {
+      background: var(--off);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 10px 20px;
+      font-size: 13px; color: var(--ink-3);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .type-pill:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+    .cta-section { padding:5.5rem 2.5rem; text-align:center; }
+    .cta-section h2 { font-family:var(--font-display); font-size:clamp(28px,4vw,50px); font-weight:400; color:var(--ink); line-height:1.1; margin-bottom:0.8rem; }
+    .cta-section h2 em { font-style:italic; color:var(--ink-3); }
+    .cta-section p { font-size:15px; color:var(--ink-3); margin-bottom:2rem; font-weight:300; }
+
+    @media(max-width:900px){
+      .clients-header { padding:3rem 1.25rem; }
+      .featured-client { grid-template-columns:1fr; }
+      .featured-photo { height:340px; }
+      .featured-content { padding:3rem 1.25rem; border-left:none; border-top:1px solid var(--border); }
+      .clients-grid-section { padding:3.5rem 1.25rem; }
+      .clients-grid { grid-template-columns:1fr 1fr; }
+      .type-strip { padding:3rem 1.25rem; }
+      .cta-section { padding:4rem 1.25rem; }
+    }
+    @media(max-width:600px){
+      .clients-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<main>
+  <div class="clients-header">
+    <span class="eyebrow">Clients</span>
+    <h1>Real people,<br><em>real results.</em></h1>
+    <p>A look at some of the people John has trained — athletes, adults, and everyone in between.</p>
+  </div>
+
+  <!-- ── FEATURED CLIENT — replace with John's first real client story ── -->
+  <section class="featured-client">
+    <div class="featured-photo">
+      <!-- REPLACE src with actual client photo URL or upload path -->
+      <!-- Example: <img src="images/clients/client-name.jpg" alt="Client name"> -->
+      <div class="photo-placeholder">
+        <div class="photo-placeholder-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a8a5a1" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="photo-placeholder-text">Client photo<br>goes here</div>
+      </div>
+    </div>
+    <div class="featured-content">
+      <span class="client-type-badge">Adult Training</span>
+      <!-- REPLACE with client name -->
+      <h2>Client Name</h2>
+      <!-- REPLACE with a short descriptor e.g. "Training for 2 years · Adult Training" -->
+      <div class="client-subtitle">Training for X years · Program Type</div>
+      <!-- REPLACE with a real quote from the client -->
+      <div class="client-quote">"Add a real quote from the client here — something they said about what training with John has done for them."</div>
+      <div class="client-detail-row">
+        <span class="client-detail-label">Goal</span>
+        <span class="client-detail-val">What they came in wanting to achieve</span>
+      </div>
+      <div class="client-detail-row">
+        <span class="client-detail-label">Program</span>
+        <span class="client-detail-val">Adult Training · 3x per week</span>
+      </div>
+      <div class="client-detail-row">
+        <span class="client-detail-label">Result</span>
+        <span class="client-detail-val">What they've accomplished — be specific</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CLIENT GRID ── -->
+  <section class="clients-grid-section">
+    <h2>More <em>clients</em></h2>
+    <div class="clients-grid">
+
+      <!-- CLIENT CARD — duplicate this block for each client -->
+      <div class="client-card">
+        <div class="client-card-photo">
+          <!-- REPLACE src with client photo -->
+          <div class="photo-placeholder" style="min-height:0;height:100%;">
+            <div class="photo-placeholder-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a8a5a1" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="photo-placeholder-text" style="font-size:11px;">Photo here</div>
+          </div>
+        </div>
+        <div class="client-card-body">
+          <span class="client-card-badge">Athlete Training</span>
+          <h3>Client Name</h3>
+          <div class="client-card-meta">Sport / Age / Duration</div>
+          <div class="client-card-quote">"Short quote from the client — 1–2 sentences."</div>
+        </div>
+      </div>
+
+      <!-- CLIENT CARD 2 -->
+      <div class="client-card">
+        <div class="client-card-photo">
+          <div class="photo-placeholder" style="min-height:0;height:100%;">
+            <div class="photo-placeholder-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a8a5a1" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="photo-placeholder-text" style="font-size:11px;">Photo here</div>
+          </div>
+        </div>
+        <div class="client-card-body">
+          <span class="client-card-badge">Youth Training</span>
+          <h3>Client Name</h3>
+          <div class="client-card-meta">Sport / Age / Duration</div>
+          <div class="client-card-quote">"Short quote from the client — 1–2 sentences."</div>
+        </div>
+      </div>
+
+      <!-- ADD MORE CLIENTS card — shows until all slots are filled -->
+      <div class="client-card add-template">
+        <div class="add-template-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a8a5a1" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <h3>Add a client here</h3>
+        <p>Duplicate a card block above and replace the name, photo, badge, and quote. Each card is self-contained.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="type-strip">
+    <h2>Training <em>options</em></h2>
+    <div class="type-pills">
+      <a href="training/adult-training.html" class="type-pill">Adult Training</a>
+      <a href="training/athlete-training.html" class="type-pill">Athlete Training</a>
+      <a href="training/youth-training.html" class="type-pill">Youth Training</a>
+      <a href="training/semi-private.html" class="type-pill">Semi-Private Training</a>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <span class="eyebrow">Get started</span>
+    <h2>Ready to be <em>next?</em></h2>
+    <p>Reach out and John will find the right program for where you are right now.</p>
+    <a href="contact.html" class="btn btn-primary" style="font-size:15px;padding:14px 34px;">Contact John</a>
+  </section>
+</main>
+<div id="footer-placeholder"></div>
+<script src="js/components.js"></script>
+</body>
+</html>
