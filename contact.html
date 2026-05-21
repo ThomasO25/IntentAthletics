@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact — Intent Athletics</title>
   <meta name="description" content="Get in touch with John Dunlop at Intent Athletics. Personal training on Long Island, NY.">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
   <style>
     .contact-header {
@@ -140,7 +142,7 @@
     <div class="form-side">
       <h2>Send a <em>message</em></h2>
       <p>Fill out the form and John will get back to you within a day or two to talk through the right fit.</p>
-      <form id="contact-form" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+      <form id="contact-form" action="https://formspree.io/f/REPLACE_WITH_YOUR_ID" method="POST">
         <div class="form-row">
           <div class="form-group">
             <label for="fname">First name</label>
@@ -214,7 +216,7 @@
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     const action = form.getAttribute('action');
-    if (action.includes('YOUR_FORM_ID')) {
+    if (action.includes('REPLACE_WITH_YOUR_ID')) {
       success.style.display = 'block';
       form.reset();
       return;
