@@ -2,34 +2,108 @@
 //  Intent Athletics Admin — Supabase
 // ═══════════════════════════════════════
 
+// Guard — make sure supabase.js loaded correctly
+if (!window.DB) {
+  console.error('Supabase client (DB) not loaded. Check supabase.js is included before admin.js.');
+  document.addEventListener('DOMContentLoaded', () => {
+    const err = document.getElementById('login-error');
+    if (err) {
+      err.textContent = 'Admin panel failed to load. Try a hard refresh (Ctrl+Shift+R / Cmd+Shift+R).';
+      err.style.display = 'block';
+    }
+  });
+}
+
 // ── AUTH ──
 async function tryLogin() {
-  const email = document.getElementById('admin-email').value.trim();
-  const pass  = document.getElementById('admin-pass').value;
-  const errEl = document.getElementById('login-error');
-  const btn   = document.getElementById('login-btn');
+  const emailEl = document.getElementById('admin-email');
+  const passEl  = document.getElementById('admin-pass');
+  const errEl   = document.getElementById('login-error');
+  const btn     = document.getElementById('login-btn');
 
-  if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display='block'; return; }
-  btn.textContent = 'Signing in…';
-  btn.disabled = true;
+  const email = emailEl ? emailEl.value.trim() : '';
+  const pass  = passEl  ? passEl.value         : '';
 
-  const result = await window.DB.signIn(email, pass);
-  btn.textContent = 'Sign in';
-  btn.disabled = false;
+  errEl.textContent = '';
+  errEl.style.display = 'none';
 
-  if (!result || result.error) {
-    errEl.textContent = result?.error?.message || 'Incorrect email or password.';
+  if (!email) {
+    errEl.textContent = 'Please enter your email.';
     errEl.style.display = 'block';
     return;
   }
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-wrap').style.display = 'flex';
+  if (!pass) {
+    errEl.textContent = 'Please enter your password.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (!window.DB) {
+    errEl.textContent = 'Admin panel not loaded correctly — try a hard refresh.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
+  let result;
+  try {
+    result = await window.DB.signIn(email, pass);
+  } catch(e) {
+    result = { error: { message: `Unexpected error: ${e.message}` } };
+  }
+
+  btn.textContent = 'Sign in';
+  btn.disabled = false;
+
+  if (!result) {
+    errEl.textContent = 'No response from server — check your internet connection.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  if (result.error) {
+    errEl.textContent = result.error.message || 'Incorrect email or password.';
+    errEl.style.display = 'block';
+    if (passEl) passEl.value = '';
+    return;
+  }
+
+  if (!result.access_token) {
+    errEl.textContent = 'Login did not complete. Make sure you confirmed your email from the Supabase invite.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  // Success
+  const loginScreen = document.getElementById('login-screen');
+  const adminWrap   = document.getElementById('admin-wrap');
+  if (loginScreen) loginScreen.style.display = 'none';
+  if (adminWrap)   adminWrap.style.display   = 'flex';
   setSection('merch');
 }
 
 document.getElementById('login-btn').addEventListener('click', tryLogin);
 document.getElementById('admin-pass').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
-document.getElementById('admin-email')?.addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+document.getElementById('admin-email').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+
+// Password show/hide toggle
+const toggleBtn  = document.getElementById('toggle-pass');
+const passInput  = document.getElementById('admin-pass');
+const eyeIcon    = document.getElementById('eye-icon');
+const eyeOpen    = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+const eyeClosed  = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
+if (toggleBtn && passInput && eyeIcon) {
+  toggleBtn.addEventListener('click', () => {
+    const isHidden = passInput.type === 'password';
+    passInput.type = isHidden ? 'text' : 'password';
+    eyeIcon.innerHTML = isHidden ? eyeClosed : eyeOpen;
+    toggleBtn.title = isHidden ? 'Hide password' : 'Show password';
+    passInput.focus();
+  });
+}
 
 document.getElementById('logout-btn').addEventListener('click', async () => {
   await window.DB.signOut();

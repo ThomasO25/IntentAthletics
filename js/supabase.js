@@ -78,18 +78,50 @@ const DB = {
 
   // Auth
   async signIn(email, password) {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.access_token) {
-      sessionStorage.setItem('ia_token', data.access_token);
-      sessionStorage.setItem('ia_user', JSON.stringify({ email: data.user?.email }));
+    try {
+      // 10 second timeout so it never hangs forever
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeout);
+
+      let data;
+      try { data = await res.json(); } catch { data = {}; }
+
+      if (!res.ok) {
+        return {
+          error: {
+            message: data.error_description
+              || data.msg
+              || data.message
+              || `Login failed (${res.status}) — check your email and password.`
+          }
+        };
+      }
+
+      if (data.access_token) {
+        sessionStorage.setItem('ia_token', data.access_token);
+        sessionStorage.setItem('ia_user', JSON.stringify({ email: data.user?.email }));
+      }
+
+      return data;
+
+    } catch(e) {
+      if (e.name === 'AbortError') {
+        return { error: { message: 'Request timed out — check your internet connection and try again.' } };
+      }
+      return { error: { message: `Connection error: ${e.message}` } };
     }
-    return data;
   },
 
   async signOut() {
