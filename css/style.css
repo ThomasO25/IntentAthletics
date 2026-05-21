@@ -49,6 +49,12 @@ body {
 
 .nav-logo { text-decoration: none; display: flex; align-items: center; }
 .nav-logo img { height: 36px; width: auto; filter: invert(1); }
+.nav-logo-text {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--ink);
+  letter-spacing: 0.2px;
+}
 
 .nav-links {
   display: flex;
@@ -74,26 +80,28 @@ body {
 .nav-dropdown-menu {
   display: none;
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 4px);
   left: 50%;
   transform: translateX(-50%);
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  min-width: 200px;
+  min-width: 210px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.08);
   overflow: hidden;
   z-index: 200;
 }
 
-.nav-dropdown:hover .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu.open { display: block; }
 
 .nav-dropdown-menu a {
   display: block;
-  padding: 10px 16px;
-  font-size: 12px;
+  padding: 11px 16px;
+  font-size: 13px;
   color: var(--ink-3);
   border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
 }
 
 .nav-dropdown-menu a:last-child { border-bottom: none; }
@@ -102,7 +110,8 @@ body {
 .nav-dropdown > a::after {
   content: ' ↓';
   font-size: 9px;
-  opacity: 0.5;
+  opacity: 0.4;
+  margin-left: 2px;
 }
 
 .nav-cta {
@@ -233,7 +242,8 @@ body {
   .nav-links.open { display: flex; }
   .nav-links li { width: 100%; }
   .nav-links a { display: block; padding: 0.75rem 1.5rem; font-size: 14px; }
-  .nav-dropdown-menu { position: static; transform: none; box-shadow: none; border: none; border-radius: 0; background: var(--off); display: block; }
+  .nav-dropdown-menu { position: static; transform: none; box-shadow: none; border: none; border-radius: 0; background: var(--off); }
+  .nav-dropdown-menu.open { display: block; }
   .nav-dropdown-menu a { padding-left: 2.5rem; font-size: 12px; }
   .nav-cta { margin: 0.5rem 1.25rem !important; display: block; text-align: center; border-radius: var(--radius-pill) !important; }
   .page-header { padding: 3rem 1.25rem 2.5rem; }

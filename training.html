@@ -5,168 +5,469 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Training — Intent Athletics</title>
   <meta name="description" content="Adult training, athlete training, youth training, and semi-private sessions on Long Island, NY. Every program built around you.">
+  <meta property="og:title" content="Training — Intent Athletics">
+  <meta property="og:image" content="https://www.intentathletics.com/wp-content/uploads/2026/05/intentimage2-1568x982.jpg">
   <link rel="stylesheet" href="css/style.css">
   <style>
+    /* ── PAGE INTRO ── */
     .training-intro {
       padding: 5rem 2.5rem 4rem;
-      border-bottom: 1px solid var(--border);
       background: var(--off);
+      border-bottom: 1px solid var(--border);
     }
     .training-intro h1 {
       font-family: var(--font-display);
-      font-size: clamp(40px,6vw,68px);
-      font-weight: 400; color: var(--ink);
-      line-height: 1.05; margin-bottom: 1.2rem;
+      font-size: clamp(44px, 6vw, 72px);
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.05;
+      margin-bottom: 1rem;
     }
     .training-intro h1 em { font-style: italic; color: var(--ink-3); }
-    .training-intro p { font-size:16px; color:var(--ink-3); max-width:500px; line-height:1.8; font-weight:300; }
+    .training-intro p {
+      font-size: 16px;
+      color: var(--ink-3);
+      max-width: 520px;
+      line-height: 1.8;
+      font-weight: 300;
+    }
 
-    .program-block {
+    /* ── JUMP NAV ── */
+    .training-jumpnav {
+      position: sticky;
+      top: 64px;
+      z-index: 50;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2.5rem;
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .training-jumpnav::-webkit-scrollbar { display: none; }
+
+    .jumpnav-link {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.4rem;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-4);
+      text-decoration: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: color 0.2s, border-color 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .jumpnav-link:hover { color: var(--ink); }
+    .jumpnav-link.active { color: var(--ink); border-bottom-color: var(--ink); }
+
+    /* ── PROGRAM SECTION ── */
+    .program-section {
       display: grid;
       grid-template-columns: 1fr 1fr;
       border-bottom: 1px solid var(--border);
-      min-height: 380px;
+      min-height: 560px;
+      scroll-margin-top: 120px; /* offset for sticky nav */
     }
-    .program-block:nth-child(even) .prog-text { order: 2; }
-    .program-block:nth-child(even) .prog-detail { order: 1; }
+
+    /* Alternate photo left/right */
+    .program-section.photo-right .prog-text { order: 1; }
+    .program-section.photo-right .prog-visual { order: 2; }
+    .program-section.photo-left  .prog-text { order: 2; }
+    .program-section.photo-left  .prog-visual { order: 1; }
 
     .prog-text {
-      padding: 4.5rem 3rem 4.5rem 2.5rem;
+      padding: 5rem 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
       border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; justify-content: center;
     }
-    .program-block:nth-child(even) .prog-text {
+    .program-section.photo-left .prog-text {
       border-right: none;
       border-left: 1px solid var(--border);
-      padding: 4.5rem 2.5rem 4.5rem 3rem;
     }
 
     .prog-num {
       font-family: var(--font-display);
-      font-size: 72px; color: var(--border);
-      line-height: 1; margin-bottom: 0.3rem;
+      font-size: 64px;
+      color: var(--border-mid);
+      line-height: 1;
+      margin-bottom: 0.2rem;
     }
 
     .prog-text h2 {
       font-family: var(--font-display);
-      font-size: clamp(28px,4vw,44px);
-      font-weight: 400; color: var(--ink);
-      line-height: 1.1; margin-bottom: 1.2rem;
+      font-size: clamp(32px, 4vw, 50px);
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 1.4rem;
     }
     .prog-text h2 em { font-style: italic; color: var(--ink-3); }
-    .prog-text p { font-size:14px; color:var(--ink-3); line-height:1.85; margin-bottom:1rem; font-weight:300; }
 
-    .prog-detail {
-      background: var(--off);
-      padding: 4.5rem 2.5rem;
-      display: flex; flex-direction: column;
-      gap: 12px; justify-content: center;
+    .prog-text p {
+      font-size: 15px;
+      color: var(--ink-3);
+      line-height: 1.85;
+      margin-bottom: 1.1rem;
+      font-weight: 300;
     }
 
-    .detail-card {
-      background: var(--white);
+    .prog-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1.5rem 0;
       border: 1px solid var(--border);
       border-radius: var(--radius-card);
-      padding: 1.2rem 1.5rem;
+      overflow: hidden;
     }
-    .detail-label {
-      font-size: 9px; font-weight: 500;
-      letter-spacing: 2px; text-transform: uppercase;
-      color: var(--ink-4); margin-bottom: 4px;
+
+    .prog-detail-row {
+      display: flex;
+      gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
     }
-    .detail-val { font-size: 13px; color: var(--ink); line-height: 1.55; }
+    .prog-detail-row:last-child { border-bottom: none; }
 
-    .cta-section { padding:5.5rem 2.5rem; text-align:center; }
-    .cta-section h2 { font-family:var(--font-display); font-size:clamp(28px,4vw,50px); font-weight:400; color:var(--ink); line-height:1.1; margin-bottom:0.8rem; }
-    .cta-section h2 em { font-style:italic; color:var(--ink-3); }
-    .cta-section p { font-size:15px; color:var(--ink-3); margin-bottom:2rem; font-weight:300; }
+    .prog-detail-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      min-width: 90px;
+      flex-shrink: 0;
+      padding-top: 2px;
+    }
 
-    @media(max-width:768px){
-      .training-intro { padding:3rem 1.25rem; }
-      .program-block { grid-template-columns:1fr; }
-      .prog-text,.program-block:nth-child(even) .prog-text { padding:3rem 1.25rem; border:none; border-bottom:1px solid var(--border); order:1; }
-      .prog-detail,.program-block:nth-child(even) .prog-detail { padding:2.5rem 1.25rem; order:2; }
-      .cta-section { padding:4rem 1.25rem; }
+    .prog-detail-val {
+      color: var(--ink-3);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* ── PHOTO SIDE ── */
+    .prog-visual {
+      position: relative;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .prog-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    /* Placeholder shown when no photo yet */
+    .prog-photo-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--border-mid);
+      text-align: center;
+      padding: 2rem;
+      background: var(--surface);
+    }
+
+    .prog-photo-placeholder svg { opacity: 0.5; }
+
+    .prog-photo-placeholder-label {
+      font-size: 12px;
+      color: var(--ink-4);
+      line-height: 1.6;
+      max-width: 200px;
+    }
+
+    .prog-photo-placeholder-tag {
+      display: inline-block;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 5px 14px;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--ink-4);
+      letter-spacing: 1px;
+    }
+
+    /* ── CTA SECTION ── */
+    .training-cta {
+      padding: 5.5rem 2.5rem;
+      text-align: center;
+    }
+    .training-cta h2 {
+      font-family: var(--font-display);
+      font-size: clamp(30px, 4vw, 52px);
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.1;
+      margin-bottom: 0.8rem;
+    }
+    .training-cta h2 em { font-style: italic; color: var(--ink-3); }
+    .training-cta p { font-size: 15px; color: var(--ink-3); margin-bottom: 2rem; font-weight: 300; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .training-intro { padding: 3rem 1.25rem; }
+      .training-jumpnav { padding: 0 0.5rem; top: 62px; }
+      .jumpnav-link { padding: 0.8rem 1rem; font-size: 11px; }
+
+      .program-section {
+        grid-template-columns: 1fr;
+        scroll-margin-top: 105px;
+      }
+      .program-section.photo-right .prog-text,
+      .program-section.photo-left  .prog-text { order: 2; border: none; border-top: 1px solid var(--border); padding: 3rem 1.25rem; }
+      .program-section.photo-right .prog-visual,
+      .program-section.photo-left  .prog-visual { order: 1; min-height: 300px; }
+
+      .training-cta { padding: 4rem 1.25rem; }
     }
   </style>
 </head>
 <body>
+
 <div id="nav-placeholder"></div>
+
 <main>
   <div class="training-intro">
     <span class="eyebrow">Training</span>
     <h1>Programs built<br>around <em>you.</em></h1>
-    <p>Four ways to work with John — all of them individualized, all of them built for where you actually are right now.</p>
+    <p>Four ways to work with John — all individualized, all built for where you actually are. Click any program below to jump straight to it.</p>
   </div>
 
-  <div class="program-block">
+  <!-- STICKY JUMP NAV -->
+  <div class="training-jumpnav">
+    <a href="#adult"        class="jumpnav-link">Adult Training</a>
+    <a href="#athlete"      class="jumpnav-link">Athlete Training</a>
+    <a href="#youth"        class="jumpnav-link">Youth Training</a>
+    <a href="#semi-private" class="jumpnav-link">Semi-Private</a>
+  </div>
+
+  <!-- ══ 01 ADULT TRAINING ══ -->
+  <section class="program-section photo-right" id="adult">
     <div class="prog-text">
       <div class="prog-num">01</div>
       <h2>Adult <em>Training</em></h2>
-      <p>One-on-one sessions with John. Your program, your pace, his full attention every session. The most direct path to your goals.</p>
-      <p>Available for all fitness levels and backgrounds — beginners, returning clients, and anyone working toward a specific goal.</p>
-      <a href="training/adult-training.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+      <p>One-on-one sessions with John. Your program, your pace, his full attention every session. Before anything starts, John will talk through your goals, your history, and what you're working with — that conversation builds the program.</p>
+      <p>Available for all ages and fitness levels. Whether you're just starting out, coming back after time off, or chasing a specific goal, the plan reflects where you actually are right now.</p>
+      <div class="prog-details">
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Format</span>
+          <span class="prog-detail-val">One-on-one, in-person sessions on Long Island</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Who it's for</span>
+          <span class="prog-detail-val">Adults of all fitness levels — beginners, returning clients, and people with specific goals or limitations</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Includes</span>
+          <span class="prog-detail-val">Custom program design · In-session coaching · Progress tracking · Nutritional counseling</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Scheduling</span>
+          <span class="prog-detail-val">Flexible — built around your availability</span>
+        </div>
+      </div>
+      <a href="contact.html" class="btn btn-primary" style="align-self:flex-start;">Get started</a>
     </div>
-    <div class="prog-detail">
-      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person</div></div>
-      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Adults of all fitness levels and ages</div></div>
-      <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Custom programming · Coaching · Nutrition</div></div>
+    <div class="prog-visual">
+      <!--
+        TO ADD PHOTO: Upload a photo of John training an adult client, then replace
+        the placeholder div below with:
+        <img src="images/adult-training.jpg" alt="John Dunlop training an adult client">
+      -->
+      <div class="prog-photo-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <div class="prog-photo-placeholder-label">Add a photo of John training an adult client</div>
+        <span class="prog-photo-placeholder-tag">Recommended: portrait orientation</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="program-block">
+  <!-- ══ 02 ATHLETE TRAINING ══ -->
+  <section class="program-section photo-left" id="athlete">
+    <div class="prog-visual">
+      <!--
+        TO ADD PHOTO: Upload a photo of John training an athlete, then replace
+        the placeholder div below with:
+        <img src="images/athlete-training.jpg" alt="John Dunlop training an athlete">
+      -->
+      <div class="prog-photo-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <div class="prog-photo-placeholder-label">Add a photo of John training an athlete</div>
+        <span class="prog-photo-placeholder-tag">Recommended: portrait orientation</span>
+      </div>
+    </div>
     <div class="prog-text">
       <div class="prog-num">02</div>
       <h2>Athlete <em>Training</em></h2>
-      <p>Performance programming for competitive and collegiate athletes. Built around your sport, your position, and your season.</p>
-      <p>John has trained athletes at the youth, collegiate, and professional level — the program accounts for what you're already doing.</p>
-      <a href="training/athlete-training.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+      <p>Performance programming built around your sport, your position, and where you are in your season. The goal is developing the specific attributes — strength, power, speed, conditioning — that translate directly to your performance.</p>
+      <p>John has trained athletes at the youth, collegiate, and professional level. The program accounts for what you're already doing in your sport and builds on it, rather than working against it.</p>
+      <div class="prog-details">
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Format</span>
+          <span class="prog-detail-val">One-on-one, in-person sessions</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Who it's for</span>
+          <span class="prog-detail-val">Competitive athletes at any level — youth, high school, collegiate, and professional</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Includes</span>
+          <span class="prog-detail-val">Sport-specific programming · Strength and conditioning · Movement assessment · Nutritional guidance</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Scheduling</span>
+          <span class="prog-detail-val">Built around your practice and competition schedule</span>
+        </div>
+      </div>
+      <a href="contact.html" class="btn btn-primary" style="align-self:flex-start;">Get started</a>
     </div>
-    <div class="prog-detail">
-      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person</div></div>
-      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Competitive athletes — youth through professional</div></div>
-      <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Sport-specific programming · Strength &amp; conditioning</div></div>
-    </div>
-  </div>
+  </section>
 
-  <div class="program-block">
+  <!-- ══ 03 YOUTH TRAINING ══ -->
+  <section class="program-section photo-right" id="youth">
     <div class="prog-text">
       <div class="prog-num">03</div>
       <h2>Youth <em>Training</em></h2>
-      <p>Building real movement foundations for young athletes — the kind that make them better in any sport and protect them as they grow.</p>
-      <p>Programs designed specifically for youth, not scaled-down adult workouts. John has worked with young athletes since day one.</p>
-      <a href="training/youth-training.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+      <p>Real movement foundations for young athletes — the kind that make kids better in any sport and protect them as they grow. Programs are designed specifically for youth, not scaled-down adult workouts.</p>
+      <p>John has worked with young athletes since the beginning of his career. He knows how to make training productive and engaging for kids, and how to build habits that serve them long term.</p>
+      <div class="prog-details">
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Format</span>
+          <span class="prog-detail-val">One-on-one, in-person sessions</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Who it's for</span>
+          <span class="prog-detail-val">Young athletes from age 7 and up — any sport, any current fitness level</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Includes</span>
+          <span class="prog-detail-val">Movement fundamentals · Age-appropriate strength training · Coordination and agility · Nutritional basics</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Note</span>
+          <span class="prog-detail-val">Programs are built specifically for youth — not modified adult workouts</span>
+        </div>
+      </div>
+      <a href="contact.html" class="btn btn-primary" style="align-self:flex-start;">Get started</a>
     </div>
-    <div class="prog-detail">
-      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person</div></div>
-      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Young athletes from age 7 and up</div></div>
-      <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Movement fundamentals · Age-appropriate strength training</div></div>
+    <div class="prog-visual">
+      <!--
+        TO ADD PHOTO: Upload a photo of John training a youth athlete, then replace
+        the placeholder div below with:
+        <img src="images/youth-training.jpg" alt="John Dunlop training a youth athlete">
+      -->
+      <div class="prog-photo-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <div class="prog-photo-placeholder-label">Add a photo of John training a youth athlete</div>
+        <span class="prog-photo-placeholder-tag">Recommended: portrait orientation</span>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class="program-block">
+  <!-- ══ 04 SEMI-PRIVATE ══ -->
+  <section class="program-section photo-left" id="semi-private">
+    <div class="prog-visual">
+      <!--
+        TO ADD PHOTO: Upload a photo of a semi-private session, then replace
+        the placeholder div below with:
+        <img src="images/semi-private.jpg" alt="Intent Athletics semi-private training session">
+      -->
+      <div class="prog-photo-placeholder">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <div class="prog-photo-placeholder-label">Add a photo of a semi-private session</div>
+        <span class="prog-photo-placeholder-tag">Recommended: portrait orientation</span>
+      </div>
+    </div>
     <div class="prog-text">
       <div class="prog-num">04</div>
       <h2>Semi-Private <em>Training</em></h2>
-      <p>Train alongside 2–3 people. Everyone has their own individualized program — shared session, accessible price point.</p>
-      <p>This is not a group class. Each person trains their own program. Great for friends or training partners.</p>
-      <a href="training/semi-private.html" class="btn btn-outline" style="margin-top:1rem;align-self:flex-start;">Learn more</a>
+      <p>Train alongside two or three people. Everyone in the session has their own individualized program — this is not a group class. You share the time and the space, but your program is built for you.</p>
+      <p>A good fit for friends or training partners who want to work with John, or for anyone who wants individualized programming at a more accessible price than fully private sessions.</p>
+      <div class="prog-details">
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Format</span>
+          <span class="prog-detail-val">Small group — 2 to 3 people per session</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Who it's for</span>
+          <span class="prog-detail-val">Friends, training partners, or anyone wanting a personalized program at a shared price</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Includes</span>
+          <span class="prog-detail-val">Individual program for each person · In-session coaching · Progress tracking · Nutritional guidance</span>
+        </div>
+        <div class="prog-detail-row">
+          <span class="prog-detail-label">Important</span>
+          <span class="prog-detail-val">Each person trains their own program — not a shared group workout</span>
+        </div>
+      </div>
+      <a href="contact.html" class="btn btn-primary" style="align-self:flex-start;">Get started</a>
     </div>
-    <div class="prog-detail">
-      <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">Small group — 2 to 3 people</div></div>
-      <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Friends, partners, or anyone wanting an individualized program at a shared price</div></div>
-      <div class="detail-card"><div class="detail-label">Note</div><div class="detail-val">Everyone trains their own program — not a group class</div></div>
-    </div>
-  </div>
+  </section>
 
-  <section class="cta-section">
-    <span class="eyebrow">Get started</span>
-    <h2>Not sure which <em>option is right?</em></h2>
-    <p>Just reach out. John will help you find the best fit.</p>
-    <a href="contact.html" class="btn btn-primary" style="font-size:15px;padding:14px 34px;">Get in touch</a>
+  <!-- CTA -->
+  <section class="training-cta">
+    <span class="eyebrow">Not sure which is right?</span>
+    <h2>Just reach out and<br><em>John will help.</em></h2>
+    <p>Describe where you are and what you're looking for — John will point you in the right direction.</p>
+    <a href="contact.html" class="btn btn-primary" style="font-size:15px;padding:14px 34px;">Contact John</a>
   </section>
 </main>
+
 <div id="footer-placeholder"></div>
 <script src="js/components.js"></script>
+<script>
+  // Highlight active jump nav link on scroll
+  document.addEventListener('DOMContentLoaded', () => {
+    const sections = ['adult','athlete','youth','semi-private'].map(id => document.getElementById(id));
+    const links    = document.querySelectorAll('.jumpnav-link');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          links.forEach(l => l.classList.remove('active'));
+          const activeLink = document.querySelector(`.jumpnav-link[href="#${entry.target.id}"]`);
+          if (activeLink) activeLink.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px' });
+
+    sections.forEach(s => { if (s) observer.observe(s); });
+  });
+</script>
 </body>
 </html>

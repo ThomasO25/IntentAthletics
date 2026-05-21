@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Youth Training — Intent Athletics</title>
+  <meta name="description" content="Building foundational movement, strength, and healthy habits for young athletes on Long Island.">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .prog-subnav {
+      padding: 1rem 2.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--off);
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .prog-subnav a {
+      font-size: 12px; color: var(--ink-3); text-decoration: none;
+      padding: 7px 16px; border: 1px solid var(--border);
+      border-radius: var(--radius-pill); transition: all 0.2s;
+    }
+    .prog-subnav a:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+    .prog-subnav a.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+
+    .prog-hero {
+      padding: 5rem 2.5rem 4rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--white);
+    }
+    .prog-hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(40px,6vw,68px); font-weight: 400;
+      color: var(--ink); line-height: 1.05; margin-bottom: 1.2rem;
+    }
+    .prog-hero h1 em { font-style: italic; color: var(--ink-3); }
+    .prog-hero p { font-size: 16px; color: var(--ink-3); max-width: 520px; line-height: 1.8; font-weight: 300; }
+
+    .prog-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--border);
+      min-height: 520px;
+    }
+
+    .prog-body-text {
+      padding: 5rem 3rem 5rem 2.5rem;
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; justify-content: center;
+    }
+    .prog-body-text p {
+      font-size: 15px; color: var(--ink-3); line-height: 1.9;
+      margin-bottom: 1.2rem; font-weight: 300;
+    }
+
+    .prog-body-photo {
+      position: relative; overflow: hidden;
+      background: var(--surface);
+    }
+    .prog-body-photo img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center top; display: block;
+    }
+    .prog-body-photo .photo-empty {
+      width: 100%; height: 100%; min-height: 400px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 12px; color: var(--ink-4);
+      font-size: 13px; text-align: center; padding: 2rem;
+    }
+    .prog-body-photo .photo-empty svg { opacity: 0.3; margin-bottom: 4px; }
+
+    .detail-stack { display: flex; flex-direction: column; gap: 12px; }
+    .detail-card {
+      background: var(--off); border: 1px solid var(--border);
+      border-radius: var(--radius-card); padding: 1.4rem 1.6rem;
+    }
+    .detail-label {
+      font-size: 9px; font-weight: 500; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--ink-4); margin-bottom: 5px;
+    }
+    .detail-val { font-size: 14px; color: var(--ink); line-height: 1.6; }
+
+    .prog-details {
+      padding: 5rem 2.5rem;
+      background: var(--off);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(2,1fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .cta-bar { padding: 5rem 2.5rem; text-align: center; }
+    .cta-bar h2 {
+      font-family: var(--font-display);
+      font-size: clamp(28px,4vw,48px); font-weight: 400;
+      color: var(--ink); line-height: 1.1; margin-bottom: 0.8rem;
+    }
+    .cta-bar h2 em { font-style: italic; color: var(--ink-3); }
+    .cta-bar p { font-size: 15px; color: var(--ink-3); margin-bottom: 2rem; font-weight: 300; }
+
+    @media(max-width:900px){
+      .prog-hero, .cta-bar { padding: 3rem 1.25rem; }
+      .prog-body { grid-template-columns: 1fr; }
+      .prog-body-text { padding: 3rem 1.25rem; border-right: none; border-bottom: 1px solid var(--border); }
+      .prog-body-photo { min-height: 300px; }
+      .prog-details { padding: 3rem 1.25rem; grid-template-columns: 1fr; }
+      .prog-subnav { padding: 1rem 1.25rem; }
+    }
+</style>
+</head>
+<body>
+<div id="nav-placeholder"></div>
+<main>
+
+  <div class="prog-subnav">
+    <a href="adult-training.html" class="">Adult Training</a>
+      <a href="athlete-training.html" class="">Athlete Training</a>
+      <a href="youth-training.html" class="active">Youth Training</a>
+      <a href="semi-private.html" class="">Semi-Private</a>
+  </div>
+
+  <div class="prog-hero">
+    <span class="eyebrow">Training · 03</span>
+    <h1><em>Youth Training</em></h1>
+    <p>Foundational training for young athletes — built around their development, not an adult template.</p>
+  </div>
+
+  <div class="prog-body">
+    <div class="prog-body-text">
+      <p>Youth training with John focuses on building real movement foundations — the kind that make kids better athletes in whatever sport they play, and protect them from injury as they grow.</p>
+      <p>John has worked with young athletes since the beginning of his career. He understands how to make training productive and engaging for kids, and how to build habits that serve them long term. Programs are designed specifically for youth — not scaled-down adult workouts.</p>
+      <a href="../contact.html" class="btn btn-primary" style="margin-top:1.2rem;align-self:flex-start;">Get started</a>
+    </div>
+    <div class="prog-body-photo" id="training-photo">
+      <!-- 
+        TO ADD A PHOTO: Replace this comment block with:
+        <img src="../images/training/youth-training.jpg" alt="John Dunlop training a youth athlete">
+        Or update the src to any image URL.
+        Recommended: portrait/vertical orientation, min 800px wide.
+      -->
+      <div class="photo-empty">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <span>Photo of John training a youth athlete — upload via admin</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="prog-details">
+    <div class="detail-card"><div class="detail-label">Format</div><div class="detail-val">One-on-one, in-person sessions</div></div>
+    <div class="detail-card"><div class="detail-label">Who it's for</div><div class="detail-val">Young athletes from age 7 and up — regardless of sport or current fitness level.</div></div>
+    <div class="detail-card"><div class="detail-label">Includes</div><div class="detail-val">Movement fundamentals · Age-appropriate strength training · Coordination and agility · Nutritional basics</div></div>
+    <div class="detail-card"><div class="detail-label">Note</div><div class="detail-val">Programs are designed specifically for youth — not scaled-down adult workouts</div></div>
+  </div>
+
+  <div class="cta-bar">
+    <h2>Ready to get <em>started?</em></h2>
+    <p>Reach out and John will find the right fit for where you are right now.</p>
+    <a href="../contact.html" class="btn btn-primary" style="font-size:15px;padding:14px 34px;">Contact John</a>
+  </div>
+
+</main>
+<div id="footer-placeholder"></div>
+<script src="../js/components.js"></script>
+</body>
+</html>
