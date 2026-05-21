@@ -292,9 +292,9 @@
 <script src="js/store.js"></script>
 <script src="js/components.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const settings = window.IA_STORE.getMerchSettings();
-  const items    = window.IA_STORE.getMerch();
+document.addEventListener('DOMContentLoaded', async () => {
+  const settings = await window.IA_STORE.getMerchSettings();
+  const items    = await window.IA_STORE.getMerch();
   const main     = document.getElementById('merch-main');
 
   // ── MODE: LIVE ──
