@@ -40,6 +40,13 @@ const IA_STORE = {
     } catch { return null; }
   },
 
+  async getTraining() {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/training?active=eq.true&order=sort_order.asc,created_at.asc`, { headers: this._h });
+      return r.ok ? r.json() : [];
+    } catch { return []; }
+  },
+
   async submitContact(data) {
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/contacts`, {

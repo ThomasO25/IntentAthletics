@@ -12,8 +12,11 @@ const DB = {
     'Prefer': 'return=representation'
   },
 
-  async get(table) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?order=sort_order.asc,created_at.asc`, { headers: this.headers });
+  async getTraining() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/training?order=sort_order.asc,created_at.asc`, { headers: this.headers });
+    if (!res.ok) return [];
+    return res.json();
+  },
     if (!res.ok) return [];
     return res.json();
   },

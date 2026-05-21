@@ -64,7 +64,7 @@ document.querySelectorAll('.sidebar-btn[data-section]').forEach(btn => {
 function setSection(s) {
   currentSection = s;
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.section === s));
-  const titles = { merch: 'Merch items', clients: 'Clients', bio: 'Bio & About page', settings: 'Settings' };
+  const titles = { merch: 'Merch items', clients: 'Clients', training: 'Training programs', bio: 'Bio & About page', settings: 'Settings' };
   document.getElementById('editor-title').textContent = titles[s] || s;
   const addBtn = document.getElementById('add-btn');
   addBtn.style.display = (s === 'settings' || s === 'bio') ? 'none' : 'flex';
@@ -75,6 +75,7 @@ function setSection(s) {
 document.getElementById('add-btn').addEventListener('click', () => {
   if (currentSection === 'merch') openMerchForm(null);
   if (currentSection === 'clients') openClientForm(null);
+  if (currentSection === 'training') openTrainingForm(null);
 });
 
 // ── DRAG TO REORDER ──
@@ -119,6 +120,7 @@ function setupImg(inputId, previewId, thumbId, onLoad) {
 function renderEditor() {
   if (currentSection === 'merch') renderMerchEditor();
   else if (currentSection === 'clients') renderClientsEditor();
+  else if (currentSection === 'training') renderTrainingEditor();
   else if (currentSection === 'bio') renderBioEditor();
   else if (currentSection === 'settings') renderSettingsEditor();
 }
@@ -126,6 +128,7 @@ function renderEditor() {
 function renderPreview() {
   if (currentSection === 'merch') renderMerchPreview();
   else if (currentSection === 'clients') renderClientsPreview();
+  else if (currentSection === 'training') renderTrainingPreview();
   else if (currentSection === 'bio') renderBioPreview();
   else document.getElementById('preview-body').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#aaa;font-size:14px;">No preview for settings.</div>';
 }
@@ -431,6 +434,278 @@ async function deleteClient(id) {
   await renderClientsEditor();
   renderPreview();
   toast('Deleted');
+}
+
+// ════════════════════════════
+//  TRAINING
+// ════════════════════════════
+let trainingItems = [];
+let editingTrainingId = null;
+let trainingImgFile = null;
+let trainingImgPreview = '';
+
+function slugify(t) { return t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,''); }
+
+async function renderTrainingEditor() {
+  document.getElementById('editor-body').innerHTML = `<div class="empty-msg" style="color:#555;">Loading…</div>`;
+  trainingItems = await window.DB.getTraining();
+
+  let html = `<div style="font-size:11px;color:#555;margin-bottom:10px;line-height:1.6;">Drag to reorder. Hidden programs don't appear on the site or in the nav dropdown.</div>`;
+  html += `<div class="item-list" id="training-list">`;
+  if (!trainingItems.length) html += `<div class="empty-msg">No programs yet. Click + Add to get started.</div>`;
+  trainingItems.forEach((item, i) => {
+    html += `<div class="item-row" data-index="${i}" data-id="${item.id}">
+      <span class="drag-handle">⠿</span>
+      <div class="item-thumb">${item.image?`<img src="${item.image}" alt="">`:svgBox()}</div>
+      <div class="item-info">
+        <div class="item-name">${item.title} ${item.active?'':'<span style="font-size:10px;color:#555;">(hidden)</span>'}</div>
+        <div class="item-meta">${(item.description||'').substring(0,50)}…</div>
+      </div>
+      <div class="item-actions">
+        <button class="icon-btn" onclick="toggleTrainingActive('${item.id}',${item.active})" title="${item.active?'Hide':'Show'}">
+          ${item.active
+            ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+            : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'}
+        </button>
+        <button class="icon-btn" onclick="openTrainingForm('${item.id}')">${svgEdit()}</button>
+        <button class="icon-btn danger" onclick="deleteTraining('${item.id}')">${svgTrash()}</button>
+      </div>
+    </div>`;
+  });
+  html += `</div><div id="training-form-area"></div>`;
+  document.getElementById('editor-body').innerHTML = html;
+
+  makeDraggable(document.getElementById('training-list'), async (from, to) => {
+    const ids = [...document.querySelectorAll('#training-list .item-row')].map(r => r.dataset.id);
+    const moved = ids.splice(from, 1)[0];
+    ids.splice(to, 0, moved);
+    await window.DB.authedReorder('training', ids);
+    await renderTrainingEditor();
+    renderPreview();
+    toast('Order saved — nav dropdown updated');
+  });
+}
+
+async function toggleTrainingActive(id, current) {
+  await window.DB.authedUpdate('training', id, { active: !current });
+  await renderTrainingEditor();
+  renderPreview();
+  toast(current ? 'Program hidden from site' : 'Program visible on site');
+}
+
+function openTrainingForm(id) {
+  editingTrainingId = id;
+  trainingImgFile = null;
+  trainingImgPreview = '';
+  const item = id ? (trainingItems.find(t => t.id === id) || {}) : {};
+  if (item.image) trainingImgPreview = item.image;
+
+  // Parse details
+  let details = [];
+  try {
+    details = Array.isArray(item.details)
+      ? item.details
+      : JSON.parse(item.details || '[]');
+  } catch { details = []; }
+
+  const detailRows = details.map((d, i) => `
+    <div class="detail-edit-row" id="detail-${i}" style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+      <input type="text" value="${esc(d.label)}" placeholder="Label" style="width:30%;background:#111;border:1px solid #333;border-radius:6px;padding:7px 10px;color:#fff;font-family:var(--font-body);font-size:12px;outline:none;">
+      <input type="text" value="${esc(d.value)}" placeholder="Value" style="flex:1;background:#111;border:1px solid #333;border-radius:6px;padding:7px 10px;color:#fff;font-family:var(--font-body);font-size:12px;outline:none;">
+      <button onclick="this.parentElement.remove();renderPreview();" style="background:#3a1010;border:none;color:#f87171;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:14px;flex-shrink:0;">×</button>
+    </div>`).join('');
+
+  document.getElementById('training-form-area').innerHTML = `
+    <div class="form-section">
+      <div class="form-section-title">${id ? 'Edit' : 'New'} program</div>
+      <div class="field">
+        <label>Program title</label>
+        <input type="text" id="tf-title" value="${esc(item.title||'')}" placeholder="e.g. Adult Training" oninput="renderPreview()">
+      </div>
+      <div class="field">
+        <label>Short description (shown on homepage cards)</label>
+        <textarea id="tf-desc" style="min-height:60px;" placeholder="One line summary…" oninput="renderPreview()">${esc(item.description||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Body paragraph 1</label>
+        <textarea id="tf-body1" placeholder="Main description…" oninput="renderPreview()">${esc(item.body1||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Body paragraph 2</label>
+        <textarea id="tf-body2" placeholder="Additional detail…" oninput="renderPreview()">${esc(item.body2||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Photo</label>
+        <div class="img-drop"><input type="file" id="tf-img" accept="image/*"><div class="img-drop-icon">📸</div><div class="img-drop-text">Click to upload training photo</div></div>
+        <div class="img-preview-wrap" id="tf-preview"${item.image?' style="display:block;"':''}>
+          <img id="tf-thumb" src="${item.image||''}" alt="">
+        </div>
+      </div>
+      <div class="field">
+        <label>Detail rows (label + value pairs shown in the info card)</label>
+        <div id="detail-rows-container">${detailRows}</div>
+        <button onclick="addDetailRow()" class="add-btn" style="margin-top:8px;">+ Add row</button>
+      </div>
+      <div class="btn-row" style="margin-top:0.5rem;">
+        <button class="save-btn" onclick="saveTraining()">Save program</button>
+        <button class="cancel-btn" onclick="renderTrainingEditor();renderPreview();">Cancel</button>
+      </div>
+    </div>`;
+
+  setupImg('tf-img', 'tf-preview', 'tf-thumb', (preview, file) => {
+    trainingImgPreview = preview;
+    trainingImgFile = file;
+    renderPreview();
+  });
+  ['tf-title','tf-desc','tf-body1','tf-body2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', renderPreview);
+  });
+  document.getElementById('training-form-area').scrollIntoView({ behavior:'smooth' });
+}
+
+function addDetailRow() {
+  const container = document.getElementById('detail-rows-container');
+  const i = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'detail-edit-row';
+  div.id = `detail-${i}`;
+  div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center;';
+  div.innerHTML = `
+    <input type="text" value="" placeholder="Label" style="width:30%;background:#111;border:1px solid #333;border-radius:6px;padding:7px 10px;color:#fff;font-family:var(--font-body);font-size:12px;outline:none;">
+    <input type="text" value="" placeholder="Value" style="flex:1;background:#111;border:1px solid #333;border-radius:6px;padding:7px 10px;color:#fff;font-family:var(--font-body);font-size:12px;outline:none;">
+    <button onclick="this.parentElement.remove();renderPreview();" style="background:#3a1010;border:none;color:#f87171;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:14px;flex-shrink:0;">×</button>`;
+  container.appendChild(div);
+  renderPreview();
+}
+
+function getDetailRows() {
+  const rows = document.querySelectorAll('.detail-edit-row');
+  const details = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const label = inputs[0]?.value.trim();
+    const value = inputs[1]?.value.trim();
+    if (label || value) details.push({ label: label||'', value: value||'' });
+  });
+  return details;
+}
+
+async function saveTraining() {
+  const title = document.getElementById('tf-title').value.trim();
+  if (!title) { alert('Please enter a program title.'); return; }
+
+  let imageUrl = editingTrainingId
+    ? (trainingItems.find(t=>t.id===editingTrainingId)||{}).image || ''
+    : '';
+
+  if (trainingImgFile) {
+    toast('Uploading photo…');
+    const url = await window.DB.uploadImage('images', trainingImgFile);
+    if (url) imageUrl = url;
+  }
+
+  const data = {
+    title,
+    description: document.getElementById('tf-desc').value.trim(),
+    body1: document.getElementById('tf-body1').value.trim(),
+    body2: document.getElementById('tf-body2').value.trim(),
+    image: imageUrl,
+    details: getDetailRows(),
+    active: true
+  };
+
+  if (editingTrainingId) {
+    await window.DB.authedUpdate('training', editingTrainingId, data);
+  } else {
+    data.sort_order = trainingItems.length;
+    await window.DB.authedInsert('training', data);
+  }
+
+  editingTrainingId = null; trainingImgFile = null; trainingImgPreview = '';
+  await renderTrainingEditor();
+  renderPreview();
+  toast('Program saved ✓ — nav dropdown updated live');
+}
+
+async function deleteTraining(id) {
+  if (!confirm('Delete this program? This cannot be undone.')) return;
+  await window.DB.authedDelete('training', id);
+  await renderTrainingEditor();
+  renderPreview();
+  toast('Program deleted — removed from nav and training page');
+}
+
+function renderTrainingPreview() {
+  // Build live preview from current state
+  let items = trainingItems.filter(t => t.active);
+  const formTitle = document.getElementById('tf-title');
+  if (formTitle) {
+    const liveItem = {
+      id: editingTrainingId || 'new',
+      title: formTitle.value || 'New Program',
+      description: (document.getElementById('tf-desc')||{}).value || '',
+      body1: (document.getElementById('tf-body1')||{}).value || '',
+      body2: (document.getElementById('tf-body2')||{}).value || '',
+      image: trainingImgPreview,
+      details: getDetailRows(),
+      active: true
+    };
+    if (editingTrainingId) items = items.map(t => t.id===editingTrainingId ? liveItem : t);
+    else items = [...items, liveItem];
+  }
+
+  const pb = document.getElementById('preview-body');
+
+  if (!items.length) {
+    pb.innerHTML = `<div style="padding:3rem;text-align:center;color:var(--ink-4);font-size:14px;">No active programs — add one using + Add above.</div>`;
+    return;
+  }
+
+  // Nav dropdown preview
+  const dropdownHtml = items.map(p =>
+    `<div style="padding:9px 14px;font-size:12px;color:var(--ink-3);border-bottom:1px solid var(--border);">${p.title}</div>`
+  ).join('');
+
+  // Program sections preview
+  const sectionsHtml = items.map((p, i) => {
+    const details = Array.isArray(p.details) ? p.details : [];
+    const photoSide = i % 2 === 0 ? 'right' : 'left';
+    const textOrder = photoSide === 'right' ? 1 : 2;
+    const photoOrder = photoSide === 'right' ? 2 : 1;
+
+    return `<div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);min-height:280px;">
+      <div style="order:${textOrder};padding:2.5rem;display:flex;flex-direction:column;justify-content:center;border-right:${photoSide==='right'?'1px solid var(--border)':'none'};border-left:${photoSide==='left'?'1px solid var(--border)':'none'};">
+        <div style="font-family:var(--font-display);font-size:52px;color:var(--border-mid);line-height:1;margin-bottom:0.2rem;">0${i+1}</div>
+        <div style="font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--ink);margin-bottom:1rem;font-style:italic;">${p.title}</div>
+        ${p.body1?`<p style="font-size:13px;color:var(--ink-3);line-height:1.85;margin-bottom:0.8rem;font-weight:300;">${p.body1}</p>`:''}
+        ${details.length?`<div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:0.8rem;">
+          ${details.map(d=>`<div style="display:flex;gap:1rem;padding:0.7rem 1rem;border-bottom:1px solid var(--border);font-size:12px;">
+            <span style="font-size:8px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-4);min-width:80px;flex-shrink:0;padding-top:2px;">${d.label}</span>
+            <span style="color:var(--ink-3);font-weight:300;">${d.value}</span>
+          </div>`).join('')}
+        </div>`:''}
+      </div>
+      <div style="order:${photoOrder};background:var(--surface);overflow:hidden;">
+        ${p.image?`<img src="${p.image}" style="width:100%;height:100%;object-fit:cover;object-position:top;" alt="">`
+          :`<div style="height:100%;display:flex;align-items:center;justify-content:center;color:var(--border-mid);font-size:12px;">Photo goes here</div>`}
+      </div>
+    </div>`;
+  }).join('');
+
+  pb.innerHTML = `
+    <div style="background:#111110;padding:1rem 1.5rem;border-bottom:1px solid #222;">
+      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#555;margin-bottom:0.5rem;">Nav dropdown preview</div>
+      <div style="background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;max-width:200px;">
+        ${dropdownHtml}
+      </div>
+    </div>
+    <div>
+      <div style="padding:2.5rem 2.5rem 1rem;background:var(--off);border-bottom:1px solid var(--border);">
+        <div style="font-family:var(--font-display);font-size:36px;font-weight:400;color:var(--ink);line-height:1.05;">Programs built<br><em style="font-style:italic;color:var(--ink-3);">around you.</em></div>
+      </div>
+      ${sectionsHtml}
+    </div>`;
 }
 
 // ════════════════════════════
