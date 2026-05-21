@@ -1,85 +1,43 @@
 // ─────────────────────────────────────────────
 //  Intent Athletics — Supabase Client
 // ─────────────────────────────────────────────
-const SUPABASE_URL = 'https://xbngqjgequangifsiori.supabase.co';
+const SUPABASE_URL  = 'https://xbngqjgequangifsiori.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmdxamdlcXVhbmdpZnNpb3JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODg3OTksImV4cCI6MjA5NDk2NDc5OX0.OAZsQqzsILHP6iS5DatxiIQbLFW-b69OyL02v1Ww5c8';
 
 const DB = {
-  headers: {
-    'apikey': SUPABASE_ANON,
-    'Authorization': `Bearer ${SUPABASE_ANON}`,
-    'Content-Type': 'application/json',
-    'Prefer': 'return=representation'
-  },
 
-  async getTraining() {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/training?order=sort_order.asc,created_at.asc`, { headers: this.headers });
+  // ── READ (public) ──
+  async get(table) {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${table}?order=sort_order.asc,created_at.asc`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
     if (!res.ok) return [];
     return res.json();
   },
+
+  async getTraining() {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/training?active=eq.true&order=sort_order.asc,created_at.asc`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
     if (!res.ok) return [];
     return res.json();
   },
 
   async getSingle(table, key) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?key=eq.${key}&limit=1`, { headers: this.headers });
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/${table}?key=eq.${key}&limit=1`,
+      { headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` } }
+    );
     if (!res.ok) return null;
     const rows = await res.json();
     return rows[0] || null;
   },
 
-  async upsertSetting(table, key, value) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: { ...this.headers, 'Prefer': 'resolution=merge-duplicates' },
-      body: JSON.stringify({ key, value })
-    });
-    return res.ok;
-  },
-
-  async insert(table, data) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-      method: 'POST',
-      headers: this.headers,
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) return null;
-    const rows = await res.json();
-    return rows[0];
-  },
-
-  async update(table, id, data) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: this.headers,
-      body: JSON.stringify(data)
-    });
-    return res.ok;
-  },
-
-  async delete(table, id) {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: this.headers
-    });
-    return res.ok;
-  },
-
-  async reorder(table, ids) {
-    // Update sort_order for each item
-    await Promise.all(ids.map((id, i) =>
-      fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: this.headers,
-        body: JSON.stringify({ sort_order: i })
-      })
-    ));
-  },
-
-  // Auth
+  // ── AUTH ──
   async signIn(email, password) {
     try {
-      // 10 second timeout so it never hangs forever
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
 
@@ -116,9 +74,9 @@ const DB = {
 
       return data;
 
-    } catch(e) {
+    } catch (e) {
       if (e.name === 'AbortError') {
-        return { error: { message: 'Request timed out — check your internet connection and try again.' } };
+        return { error: { message: 'Request timed out — check your internet connection.' } };
       }
       return { error: { message: `Connection error: ${e.message}` } };
     }
@@ -130,7 +88,7 @@ const DB = {
       await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
         method: 'POST',
         headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${token}` }
-      });
+      }).catch(() => {});
     }
     sessionStorage.removeItem('ia_token');
     sessionStorage.removeItem('ia_user');
@@ -140,7 +98,7 @@ const DB = {
     return sessionStorage.getItem('ia_token');
   },
 
-  // Authed headers for write operations
+  // ── AUTHED WRITE HEADERS ──
   authedHeaders() {
     const token = sessionStorage.getItem('ia_token');
     return {
@@ -151,13 +109,14 @@ const DB = {
     };
   },
 
+  // ── WRITE (authenticated) ──
   async authedInsert(table, data) {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
       method: 'POST',
       headers: this.authedHeaders(),
       body: JSON.stringify(data)
     });
-    if (!res.ok) { console.error(await res.text()); return null; }
+    if (!res.ok) { console.error('Insert failed:', await res.text()); return null; }
     const rows = await res.json();
     return rows[0];
   },
@@ -168,6 +127,7 @@ const DB = {
       headers: this.authedHeaders(),
       body: JSON.stringify(data)
     });
+    if (!res.ok) console.error('Update failed:', await res.text());
     return res.ok;
   },
 
@@ -185,25 +145,28 @@ const DB = {
       headers: { ...this.authedHeaders(), 'Prefer': 'resolution=merge-duplicates' },
       body: JSON.stringify({ key, value })
     });
+    if (!res.ok) console.error('Upsert failed:', await res.text());
     return res.ok;
   },
 
   async authedReorder(table, ids) {
-    await Promise.all(ids.map((id, i) =>
-      fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
-        method: 'PATCH',
-        headers: this.authedHeaders(),
-        body: JSON.stringify({ sort_order: i })
-      })
-    ));
+    await Promise.all(
+      ids.map((id, i) =>
+        fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+          method: 'PATCH',
+          headers: this.authedHeaders(),
+          body: JSON.stringify({ sort_order: i })
+        })
+      )
+    );
   },
 
-  // Upload image to Supabase Storage
+  // ── IMAGE UPLOAD ──
   async uploadImage(bucket, file) {
     const token = sessionStorage.getItem('ia_token');
-    const ext = file.name.split('.').pop();
+    const ext  = file.name.split('.').pop();
     const name = `${Date.now()}.${ext}`;
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${name}`, {
+    const res  = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${name}`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON,
@@ -212,9 +175,10 @@ const DB = {
       },
       body: file
     });
-    if (!res.ok) return null;
+    if (!res.ok) { console.error('Upload failed:', await res.text()); return null; }
     return `${SUPABASE_URL}/storage/v1/object/public/${bucket}/${name}`;
   }
+
 };
 
 window.DB = DB;
