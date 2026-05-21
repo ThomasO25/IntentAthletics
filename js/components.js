@@ -1,4 +1,4 @@
-const LOGO_URL  = 'https://www.intentathletics.com/wp-content/uploads/2026/05/Intent_Athletics_Logo_FINAL_WHITE.png';
+const LOGO_URL  = 'images/logo.png';
 const PORTAL_URL = 'https://trainwith.intentathletics.com';
 const MERCH_URL  = 'https://wokeathleletics-fitness.itemorder.com/shop/home/';
 const INSTA_URL  = 'https://www.instagram.com/intentathletics.li/';

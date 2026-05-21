@@ -6,7 +6,9 @@
   <title>About John — Intent Athletics</title>
   <meta name="description" content="John Dunlop has been training clients on Long Island for 15+ years — from youth athletes to adults in their 80s.">
   <meta property="og:title" content="About — Intent Athletics">
-  <meta property="og:image" content="https://www.intentathletics.com/wp-content/uploads/2026/05/intentimage3-863x1024.jpg">
+  <meta property="og:image" content="images/john.jpg">
+  <link rel="icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
   <style>
     .about-hero {
@@ -199,30 +201,30 @@
 <main>
   <section class="about-hero">
     <div class="about-hero-photo">
-      <img src="https://www.intentathletics.com/wp-content/uploads/2026/05/intentimage3-863x1024.jpg" alt="John Dunlop — Intent Athletics" loading="eager">
+      <img src="images/john.jpg" alt="John Dunlop — Intent Athletics" loading="eager">
     </div>
     <div class="about-hero-text">
       <div class="owner-label">Owner / Trainer</div>
       <h1>John<br><em>Dunlop</em></h1>
-      <p>John has been training clients on Long Island for over 15 years — from 7-year-old youth athletes to adults in their 80s. Every program is built from scratch for the person in front of him.</p>
-      <p>All of his clients are unique and have different goals, so training programs and nutritional counseling are catered to each person's individual needs.</p>
+      <p id="bio-intro1"></p>
+      <p id="bio-intro2"></p>
       <a href="contact.html" class="btn btn-primary" style="margin-top:1rem;align-self:flex-start;">Get in touch</a>
       <div class="id-card">
         <div class="id-card-row">
           <span class="id-label">Experience</span>
-          <span class="id-val">15+ years training clients on Long Island</span>
+          <span class="id-val" id="bio-experience"></span>
         </div>
         <div class="id-card-row">
           <span class="id-label">Client range</span>
-          <span class="id-val">Ages 7–85 · Beginner to professional athlete</span>
+          <span class="id-val" id="bio-clientRange"></span>
         </div>
         <div class="id-card-row">
           <span class="id-label">Specialties</span>
-          <span class="id-val">Strength training · Youth athletics · Athletic performance · Older adults · Nutritional counseling</span>
+          <span class="id-val" id="bio-specialties"></span>
         </div>
         <div class="id-card-row">
           <span class="id-label">Location</span>
-          <span class="id-val">Long Island, NY</span>
+          <span class="id-val" id="bio-location"></span>
         </div>
       </div>
     </div>
@@ -232,13 +234,13 @@
     <div><span class="eyebrow">The story</span></div>
     <div class="story-body">
       <h2>Training with <em>purpose.</em></h2>
-      <p>John started his career with a different plan. After college and moving toward a teaching job — the expected, safe route — he had a moment of clarity. He walked away from it and went all-in on fitness. Not because it was easy, but because it was right.</p>
-      <p>The name Intent Athletics comes from that shift. Training with intent means knowing what you're doing, why you're doing it, and having a plan that makes sense for you specifically — not something recycled from someone else.</p>
+      <p id="bio-storyP1"></p>
+      <p id="bio-storyP2"></p>
       <div class="pullquote">
-        <p>My goal is to help people understand how to train and take better care of their bodies — and to cut through an industry full of things that don't make sense.</p>
+        <p id="bio-pullquote"></p>
       </div>
-      <p>You do not have to be, or have ever been, an athlete to take care of your body and train like one. All you need is a good plan, a positive attitude, and the willingness to work hard.</p>
-      <p>If you're a person with a goal of making yourself move, look, and feel better — you're most likely the right fit.</p>
+      <p id="bio-storyP3"></p>
+      <p id="bio-storyP4"></p>
     </div>
   </section>
 
@@ -298,6 +300,17 @@
   </section>
 </main>
 <div id="footer-placeholder"></div>
+<script src="js/store.js"></script>
 <script src="js/components.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const bio = window.IA_STORE.getBio();
+  const fields = ['intro1','intro2','experience','clientRange','specialties','location','storyP1','storyP2','pullquote','storyP3','storyP4'];
+  fields.forEach(f => {
+    const el = document.getElementById('bio-' + f);
+    if (el && bio[f]) el.textContent = bio[f];
+  });
+});
+</script>
 </body>
 </html>

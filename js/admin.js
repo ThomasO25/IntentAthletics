@@ -40,10 +40,10 @@ document.querySelectorAll('.sidebar-btn[data-section]').forEach(btn => {
 function setSection(s) {
   currentSection = s;
   document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.toggle('active', b.dataset.section === s));
-  const titles = { merch: 'Merch items', clients: 'Clients', settings: 'Settings' };
+  const titles = { merch: 'Merch items', clients: 'Clients', bio: 'Bio & About page', settings: 'Settings' };
   document.getElementById('editor-title').textContent = titles[s] || s;
   const addBtn = document.getElementById('add-btn');
-  addBtn.style.display = s === 'settings' ? 'none' : 'flex';
+  addBtn.style.display = (s === 'settings' || s === 'bio') ? 'none' : 'flex';
   renderEditor();
   renderPreview();
 }
@@ -104,12 +104,14 @@ function setupImg(inputId, previewId, thumbId, onLoad) {
 function renderEditor() {
   if (currentSection === 'merch') renderMerchEditor();
   else if (currentSection === 'clients') renderClientsEditor();
+  else if (currentSection === 'bio') renderBioEditor();
   else if (currentSection === 'settings') renderSettingsEditor();
 }
 
 function renderPreview() {
   if (currentSection === 'merch') renderMerchPreview();
   else if (currentSection === 'clients') renderClientsPreview();
+  else if (currentSection === 'bio') renderBioPreview();
   else document.getElementById('preview-body').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:200px;color:#aaa;font-size:14px;">No preview for settings.</div>';
 }
 
@@ -344,6 +346,130 @@ function deleteClient(i) {
   window.IA_STORE.saveTestimonials(items);
   renderClientsEditor(); renderPreview();
   toast('Deleted');
+}
+
+// ════════════════════════════
+//  BIO
+// ════════════════════════════
+function renderBioEditor() {
+  const bio = window.IA_STORE.getBio();
+  document.getElementById('editor-body').innerHTML = `
+    <p style="font-size:11px;color:#555;line-height:1.6;margin-bottom:1rem;">
+      Edit John's bio here. Changes appear on the About page instantly. Use the preview panel to see exactly how it looks before saving.
+    </p>
+
+    <div class="form-section">
+      <div class="form-section-title">Intro paragraphs</div>
+      <div class="field">
+        <label>First paragraph</label>
+        <textarea id="bio-intro1" oninput="renderBioPreview()">${esc(bio.intro1||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Second paragraph</label>
+        <textarea id="bio-intro2" oninput="renderBioPreview()">${esc(bio.intro2||'')}</textarea>
+      </div>
+    </div>
+
+    <div class="form-section" style="margin-top:1rem;">
+      <div class="form-section-title">Quick facts card</div>
+      <div class="field">
+        <label>Experience</label>
+        <input type="text" id="bio-experience" value="${esc(bio.experience||'')}" oninput="renderBioPreview()">
+      </div>
+      <div class="field">
+        <label>Client range</label>
+        <input type="text" id="bio-clientRange" value="${esc(bio.clientRange||'')}" oninput="renderBioPreview()">
+      </div>
+      <div class="field">
+        <label>Specialties</label>
+        <input type="text" id="bio-specialties" value="${esc(bio.specialties||'')}" oninput="renderBioPreview()">
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="bio-location" value="${esc(bio.location||'')}" oninput="renderBioPreview()">
+      </div>
+    </div>
+
+    <div class="form-section" style="margin-top:1rem;">
+      <div class="form-section-title">Story section</div>
+      <div class="field">
+        <label>Story paragraph 1</label>
+        <textarea id="bio-storyP1" oninput="renderBioPreview()">${esc(bio.storyP1||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Story paragraph 2</label>
+        <textarea id="bio-storyP2" oninput="renderBioPreview()">${esc(bio.storyP2||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Pull quote (the highlighted quote in the middle)</label>
+        <textarea id="bio-pullquote" style="min-height:60px;" oninput="renderBioPreview()">${esc(bio.pullquote||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Story paragraph 3</label>
+        <textarea id="bio-storyP3" oninput="renderBioPreview()">${esc(bio.storyP3||'')}</textarea>
+      </div>
+      <div class="field">
+        <label>Story paragraph 4</label>
+        <textarea id="bio-storyP4" oninput="renderBioPreview()">${esc(bio.storyP4||'')}</textarea>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:1rem;">
+      <button class="save-btn" onclick="saveBio()">Save bio</button>
+      <button class="cancel-btn" onclick="renderBioEditor();renderBioPreview();">Reset</button>
+    </div>`;
+}
+
+function saveBio() {
+  const fields = ['intro1','intro2','experience','clientRange','specialties','location','storyP1','storyP2','pullquote','storyP3','storyP4'];
+  const bio = {};
+  fields.forEach(f => {
+    const el = document.getElementById('bio-' + f);
+    if (el) bio[f] = el.value.trim();
+  });
+  window.IA_STORE.saveBio(bio);
+  toast('Bio saved ✓');
+}
+
+function renderBioPreview() {
+  const fields = ['intro1','intro2','experience','clientRange','specialties','location','storyP1','storyP2','pullquote','storyP3','storyP4'];
+  const bio = {};
+  fields.forEach(f => {
+    const saved = window.IA_STORE.getBio();
+    const el = document.getElementById('bio-' + f);
+    bio[f] = el ? el.value : (saved[f] || '');
+  });
+
+  document.getElementById('preview-body').innerHTML = `
+    <div style="padding:2.5rem;border-bottom:1px solid var(--border);background:var(--off);">
+      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-4);margin-bottom:0.6rem;">Owner / Trainer</div>
+      <div style="font-family:var(--font-display);font-size:42px;font-weight:400;color:var(--ink);line-height:1;margin-bottom:1.5rem;">John<br><em style="font-style:italic;color:var(--ink-3);">Dunlop</em></div>
+      <p style="font-size:14px;color:var(--ink-3);line-height:1.85;margin-bottom:1rem;font-weight:300;">${bio.intro1}</p>
+      <p style="font-size:14px;color:var(--ink-3);line-height:1.85;font-weight:300;">${bio.intro2}</p>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:1.5rem;">
+        ${[
+          ['Experience', bio.experience],
+          ['Client range', bio.clientRange],
+          ['Specialties', bio.specialties],
+          ['Location', bio.location]
+        ].map(([l,v]) => `
+          <div style="padding:0.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;">
+            <span style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-4);min-width:90px;flex-shrink:0;padding-top:2px;">${l}</span>
+            <span style="font-size:13px;color:var(--ink-3);font-weight:300;">${v}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+    <div style="padding:2.5rem;border-bottom:1px solid var(--border);">
+      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-4);margin-bottom:1rem;">The story</div>
+      <div style="font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--ink);line-height:1.1;margin-bottom:1.5rem;">Training with <em style="font-style:italic;color:var(--ink-3);">purpose.</em></div>
+      <p style="font-size:14px;color:var(--ink-3);line-height:1.9;margin-bottom:1rem;font-weight:300;">${bio.storyP1}</p>
+      <p style="font-size:14px;color:var(--ink-3);line-height:1.9;margin-bottom:1.5rem;font-weight:300;">${bio.storyP2}</p>
+      <div style="background:var(--off);border-radius:12px;border-left:3px solid var(--border-mid);padding:1.4rem 1.6rem;margin-bottom:1.5rem;">
+        <p style="font-family:var(--font-display);font-size:17px;color:var(--ink);line-height:1.55;font-style:italic;margin:0;">${bio.pullquote}</p>
+      </div>
+      <p style="font-size:14px;color:var(--ink-3);line-height:1.9;margin-bottom:1rem;font-weight:300;">${bio.storyP3}</p>
+      <p style="font-size:14px;color:var(--ink-3);line-height:1.9;font-weight:300;">${bio.storyP4}</p>
+    </div>`;
 }
 
 // ════════════════════════════
