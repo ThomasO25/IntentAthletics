@@ -1,26 +1,50 @@
+// ═══════════════════════════════════════
+//  Intent Athletics Admin — Supabase
+// ═══════════════════════════════════════
+
 // ── AUTH ──
-const DEFAULT_PASS = 'IntentAdmin2026';
-const getPass = () => localStorage.getItem('ia_admin_pass') || DEFAULT_PASS;
+async function tryLogin() {
+  const email = document.getElementById('admin-email').value.trim();
+  const pass  = document.getElementById('admin-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+
+  if (!email || !pass) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display='block'; return; }
+  btn.textContent = 'Signing in…';
+  btn.disabled = true;
+
+  const result = await window.DB.signIn(email, pass);
+  btn.textContent = 'Sign in';
+  btn.disabled = false;
+
+  if (!result || result.error) {
+    errEl.textContent = result?.error?.message || 'Incorrect email or password.';
+    errEl.style.display = 'block';
+    return;
+  }
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-wrap').style.display = 'flex';
+  setSection('merch');
+}
 
 document.getElementById('login-btn').addEventListener('click', tryLogin);
 document.getElementById('admin-pass').addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
+document.getElementById('admin-email')?.addEventListener('keydown', e => { if(e.key==='Enter') tryLogin(); });
 
-function tryLogin() {
-  if (document.getElementById('admin-pass').value === getPass()) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('admin-wrap').style.display = 'flex';
-    setSection('merch');
-  } else {
-    document.getElementById('login-error').style.display = 'block';
-    document.getElementById('admin-pass').value = '';
-  }
-}
-
-document.getElementById('logout-btn').addEventListener('click', () => {
+document.getElementById('logout-btn').addEventListener('click', async () => {
+  await window.DB.signOut();
   document.getElementById('admin-wrap').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('admin-email').value = '';
   document.getElementById('admin-pass').value = '';
 });
+
+// Check if already logged in
+if (window.DB.getSession()) {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('admin-wrap').style.display = 'flex';
+  setTimeout(() => setSection('merch'), 100);
+}
 
 // ── TOAST ──
 function toast(msg) {
@@ -30,7 +54,7 @@ function toast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// ── SECTION ──
+// ── SECTION ROUTING ──
 let currentSection = 'merch';
 
 document.querySelectorAll('.sidebar-btn[data-section]').forEach(btn => {
@@ -56,29 +80,20 @@ document.getElementById('add-btn').addEventListener('click', () => {
 // ── DRAG TO REORDER ──
 let dragSrc = null;
 
-function makeDraggable(list) {
+function makeDraggable(list, onDrop) {
   if (!list) return;
   list.querySelectorAll('.item-row').forEach((row, i) => {
     row.draggable = true;
     row.dataset.index = i;
     row.addEventListener('dragstart', e => { dragSrc = row; row.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-    row.addEventListener('dragend', () => { row.classList.remove('dragging'); list.querySelectorAll('.item-row').forEach(r => r.classList.remove('drag-over')); });
-    row.addEventListener('dragover', e => { e.preventDefault(); if(dragSrc!==row) row.classList.add('drag-over'); });
+    row.addEventListener('dragend',   () => { row.classList.remove('dragging'); list.querySelectorAll('.item-row').forEach(r => r.classList.remove('drag-over')); });
+    row.addEventListener('dragover',  e => { e.preventDefault(); if(dragSrc!==row) row.classList.add('drag-over'); });
     row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
-    row.addEventListener('drop', e => {
+    row.addEventListener('drop', async e => {
       e.preventDefault();
-      if (dragSrc === row) return;
       row.classList.remove('drag-over');
-      const items = currentSection === 'merch' ? window.IA_STORE.getMerch() : window.IA_STORE.getTestimonials();
-      const from = parseInt(dragSrc.dataset.index);
-      const to = parseInt(row.dataset.index);
-      const moved = items.splice(from, 1)[0];
-      items.splice(to, 0, moved);
-      if (currentSection === 'merch') window.IA_STORE.saveMerch(items);
-      else window.IA_STORE.saveTestimonials(items);
-      renderEditor();
-      renderPreview();
-      toast('Order updated');
+      if (dragSrc === row) return;
+      if (onDrop) await onDrop(parseInt(dragSrc.dataset.index), parseInt(row.dataset.index));
     });
   });
 }
@@ -94,7 +109,7 @@ function setupImg(inputId, previewId, thumbId, onLoad) {
     reader.onload = e => {
       document.getElementById(thumbId).src = e.target.result;
       document.getElementById(previewId).style.display = 'block';
-      if (onLoad) onLoad(e.target.result);
+      if (onLoad) onLoad(e.target.result, file);
     };
     reader.readAsDataURL(file);
   });
@@ -118,86 +133,97 @@ function renderPreview() {
 // ════════════════════════════
 //  MERCH
 // ════════════════════════════
-let editingMerchIdx = null;
-let merchImg = '';
+let merchItems = [];
+let editingMerchId = null;
+let merchImgFile = null;
+let merchImgPreview = '';
 
-function renderMerchEditor() {
-  const items    = window.IA_STORE.getMerch();
-  const settings = window.IA_STORE.getMerchSettings();
-  const mode     = settings.mode || 'coming_soon';
+async function renderMerchEditor() {
+  document.getElementById('editor-body').innerHTML = `<div class="empty-msg" style="color:#555;">Loading…</div>`;
+  merchItems = await window.DB.get('merch');
 
-  // Mode selector at top
+  const settings = await window.DB.getSingle('settings', 'merch_settings');
+  const ms = settings ? (settings.value || {}) : { mode: 'coming_soon', releaseDate: '' };
+  const mode = ms.mode || 'coming_soon';
+
   let html = `
   <div class="form-section" style="margin-bottom:1rem;">
     <div class="form-section-title">Store display mode</div>
     <div class="field">
       <label>What visitors see on the Merch page</label>
       <select id="merch-mode-select" onchange="saveMerchMode()">
-        <option value="coming_soon"  ${mode==='coming_soon'  ?'selected':''}>Coming Soon</option>
-        <option value="release_date" ${mode==='release_date' ?'selected':''}>Countdown to release date</option>
-        <option value="live"         ${mode==='live'         ?'selected':''}>Live — show merch items</option>
+        <option value="coming_soon"  ${mode==='coming_soon' ?'selected':''}>Coming Soon</option>
+        <option value="release_date" ${mode==='release_date'?'selected':''}>Countdown to release date</option>
+        <option value="live"         ${mode==='live'        ?'selected':''}>Live — show merch items</option>
       </select>
     </div>
     <div id="release-date-field" style="${mode==='release_date'?'':'display:none;'}">
       <div class="field" style="margin-top:0.8rem;">
         <label>Release date</label>
-        <input type="date" id="merch-release-date" value="${settings.releaseDate||''}" onchange="saveMerchMode()">
+        <input type="date" id="merch-release-date" value="${ms.releaseDate||''}" onchange="saveMerchMode()">
       </div>
     </div>
     <div style="margin-top:0.8rem;font-size:11px;color:#555;line-height:1.6;">
-      <b style="color:#888;">Coming Soon</b> — shows a "coming soon" splash with email notify.<br>
-      <b style="color:#888;">Countdown</b> — shows a live countdown timer to your release date.<br>
-      <b style="color:#888;">Live</b> — shows your actual merch items below.
+      <b style="color:#888;">Coming Soon</b> — splash page with email notify.<br>
+      <b style="color:#888;">Countdown</b> — live countdown timer to your release date.<br>
+      <b style="color:#888;">Live</b> — shows your actual merch items.
     </div>
   </div>
   <div class="item-list" id="merch-list">`;
 
-  if (!items.length) html += `<div class="empty-msg">No items yet. Click + Add to add your first product.</div>`;
-  items.forEach((item, i) => {
-    html += `<div class="item-row" data-index="${i}">
+  if (!merchItems.length) html += `<div class="empty-msg">No items yet. Click + Add to get started.</div>`;
+  merchItems.forEach((item, i) => {
+    html += `<div class="item-row" data-index="${i}" data-id="${item.id}">
       <span class="drag-handle">⠿</span>
-      <div class="item-thumb">${item.image ? `<img src="${item.image}" alt="">` : svgBox()}</div>
+      <div class="item-thumb">${item.image?`<img src="${item.image}" alt="">`:svgBox()}</div>
       <div class="item-info">
         <div class="item-name">${item.name}</div>
-        <div class="item-meta">${item.price ? '$'+item.price : 'No price'}</div>
+        <div class="item-meta">${item.price?'$'+item.price:'No price'}</div>
       </div>
       <div class="item-actions">
-        <button class="icon-btn" onclick="openMerchForm(${i})">${svgEdit()}</button>
-        <button class="icon-btn danger" onclick="deleteMerch(${i})">${svgTrash()}</button>
+        <button class="icon-btn" onclick="openMerchForm('${item.id}')">${svgEdit()}</button>
+        <button class="icon-btn danger" onclick="deleteMerch('${item.id}')">${svgTrash()}</button>
       </div>
     </div>`;
   });
   html += `</div><div id="merch-form-area"></div>`;
   document.getElementById('editor-body').innerHTML = html;
-  makeDraggable(document.getElementById('merch-list'));
+
+  makeDraggable(document.getElementById('merch-list'), async (from, to) => {
+    const ids = [...document.querySelectorAll('#merch-list .item-row')].map(r => r.dataset.id);
+    const moved = ids.splice(from, 1)[0];
+    ids.splice(to, 0, moved);
+    await window.DB.authedReorder('merch', ids);
+    await renderMerchEditor();
+    toast('Order saved');
+  });
 }
 
-function saveMerchMode() {
+async function saveMerchMode() {
   const mode = document.getElementById('merch-mode-select').value;
   const dateEl = document.getElementById('merch-release-date');
   const dateField = document.getElementById('release-date-field');
-  dateField.style.display = mode === 'release_date' ? 'block' : 'none';
-  const settings = { mode, releaseDate: dateEl ? dateEl.value : '' };
-  window.IA_STORE.saveMerchSettings(settings);
+  if (dateField) dateField.style.display = mode === 'release_date' ? 'block' : 'none';
+  await window.DB.authedUpsertSetting('merch_settings', { mode, releaseDate: dateEl ? dateEl.value : '' });
   renderPreview();
 }
 
-function openMerchForm(idx) {
-  editingMerchIdx = idx;
-  merchImg = '';
-  const items = window.IA_STORE.getMerch();
-  const item = idx !== null ? items[idx] : {};
-  if (item.image) merchImg = item.image;
+function openMerchForm(id) {
+  editingMerchId = id;
+  merchImgFile = null;
+  merchImgPreview = '';
+  const item = id ? (merchItems.find(m => m.id === id) || {}) : {};
+  if (item.image) merchImgPreview = item.image;
 
   document.getElementById('merch-form-area').innerHTML = `
     <div class="form-section">
-      <div class="form-section-title">${idx !== null ? 'Edit' : 'New'} item</div>
+      <div class="form-section-title">${id ? 'Edit' : 'New'} item</div>
       <div class="field"><label>Name</label><input type="text" id="mf-name" value="${esc(item.name||'')}" placeholder="e.g. Intent Athletics Tee"></div>
       <div class="field-row">
         <div class="field"><label>Price ($)</label><input type="number" id="mf-price" value="${esc(item.price||'')}" placeholder="35"></div>
         <div class="field"><label>Buy link</label><input type="url" id="mf-link" value="${esc(item.link||'')}" placeholder="https://…"></div>
       </div>
-      <div class="field"><label>Description</label><textarea id="mf-desc" placeholder="Short description…">${esc(item.desc||'')}</textarea></div>
+      <div class="field"><label>Description</label><textarea id="mf-desc" placeholder="Short description…">${esc(item.description||'')}</textarea></div>
       <div class="field"><label>Photo</label>
         <div class="img-drop"><input type="file" id="mf-img" accept="image/*"><div class="img-drop-icon">📦</div><div class="img-drop-text">Click to upload</div></div>
         <div class="img-preview-wrap" id="mf-preview"${item.image?' style="display:block;"':''}>
@@ -210,76 +236,111 @@ function openMerchForm(idx) {
       </div>
     </div>`;
 
-  setupImg('mf-img', 'mf-preview', 'mf-thumb', src => { merchImg = src; renderPreview(); });
+  setupImg('mf-img', 'mf-preview', 'mf-thumb', (preview, file) => {
+    merchImgPreview = preview;
+    merchImgFile = file;
+    renderPreview();
+  });
   ['mf-name','mf-price','mf-desc'].forEach(id => { const el=document.getElementById(id); if(el) el.addEventListener('input', renderPreview); });
   document.getElementById('merch-form-area').scrollIntoView({ behavior:'smooth' });
 }
 
-function saveMerch() {
+async function saveMerch() {
   const name = document.getElementById('mf-name').value.trim();
   if (!name) { alert('Please enter a name.'); return; }
-  const items = window.IA_STORE.getMerch();
-  const item = { name, price: document.getElementById('mf-price').value.trim(), desc: document.getElementById('mf-desc').value.trim(), link: document.getElementById('mf-link').value.trim(), image: merchImg };
-  if (editingMerchIdx !== null) items[editingMerchIdx] = item;
-  else items.push(item);
-  window.IA_STORE.saveMerch(items);
-  editingMerchIdx = null; merchImg = '';
-  renderMerchEditor(); renderPreview();
+
+  let imageUrl = editingMerchId ? (merchItems.find(m=>m.id===editingMerchId)||{}).image || '' : '';
+
+  if (merchImgFile) {
+    toast('Uploading image…');
+    const url = await window.DB.uploadImage('images', merchImgFile);
+    if (url) imageUrl = url;
+  }
+
+  const data = {
+    name,
+    price: document.getElementById('mf-price').value.trim(),
+    description: document.getElementById('mf-desc').value.trim(),
+    link: document.getElementById('mf-link').value.trim(),
+    image: imageUrl
+  };
+
+  if (editingMerchId) {
+    await window.DB.authedUpdate('merch', editingMerchId, data);
+  } else {
+    data.sort_order = merchItems.length;
+    await window.DB.authedInsert('merch', data);
+  }
+
+  editingMerchId = null; merchImgFile = null; merchImgPreview = '';
+  await renderMerchEditor();
+  renderPreview();
   toast('Item saved ✓');
 }
 
-function deleteMerch(i) {
+async function deleteMerch(id) {
   if (!confirm('Delete this item?')) return;
-  const items = window.IA_STORE.getMerch();
-  items.splice(i, 1);
-  window.IA_STORE.saveMerch(items);
-  renderMerchEditor(); renderPreview();
+  await window.DB.authedDelete('merch', id);
+  await renderMerchEditor();
+  renderPreview();
   toast('Deleted');
 }
 
 // ════════════════════════════
 //  CLIENTS
 // ════════════════════════════
-let editingClientIdx = null;
-let clientImg = '';
+let clientItems = [];
+let editingClientId = null;
+let clientImgFile = null;
+let clientImgPreview = '';
 let clientFeatured = false;
 
-function renderClientsEditor() {
-  const items = window.IA_STORE.getTestimonials();
-  let html = `<div style="font-size:11px;color:#555;margin-bottom:10px;line-height:1.6;">Drag to reorder. Star = featured client shown large at the top of the Clients page.</div>`;
+async function renderClientsEditor() {
+  document.getElementById('editor-body').innerHTML = `<div class="empty-msg" style="color:#555;">Loading…</div>`;
+  clientItems = await window.DB.get('clients');
+
+  let html = `<div style="font-size:11px;color:#555;margin-bottom:10px;line-height:1.6;">Drag to reorder. ★ = featured client shown large at top of Clients page.</div>`;
   html += `<div class="item-list" id="clients-list">`;
-  if (!items.length) html += `<div class="empty-msg">No clients yet. Click + Add to get started.</div>`;
-  items.forEach((item, i) => {
-    html += `<div class="item-row" data-index="${i}">
+  if (!clientItems.length) html += `<div class="empty-msg">No clients yet. Click + Add to get started.</div>`;
+  clientItems.forEach((item, i) => {
+    html += `<div class="item-row" data-index="${i}" data-id="${item.id}">
       <span class="drag-handle">⠿</span>
-      <div class="item-thumb">${item.photo ? `<img src="${item.photo}" alt="">` : svgPerson()}</div>
+      <div class="item-thumb">${item.photo?`<img src="${item.photo}" alt="">`:svgPerson()}</div>
       <div class="item-info">
         <div class="item-name">${item.name}${item.featured?' ★':''}</div>
         <div class="item-meta">${item.program||''}${item.subtitle?' · '+item.subtitle:''}</div>
       </div>
       <div class="item-actions">
-        <button class="icon-btn" onclick="openClientForm(${i})">${svgEdit()}</button>
-        <button class="icon-btn danger" onclick="deleteClient(${i})">${svgTrash()}</button>
+        <button class="icon-btn" onclick="openClientForm('${item.id}')">${svgEdit()}</button>
+        <button class="icon-btn danger" onclick="deleteClient('${item.id}')">${svgTrash()}</button>
       </div>
     </div>`;
   });
   html += `</div><div id="client-form-area"></div>`;
   document.getElementById('editor-body').innerHTML = html;
-  makeDraggable(document.getElementById('clients-list'));
+
+  makeDraggable(document.getElementById('clients-list'), async (from, to) => {
+    const ids = [...document.querySelectorAll('#clients-list .item-row')].map(r => r.dataset.id);
+    const moved = ids.splice(from, 1)[0];
+    ids.splice(to, 0, moved);
+    await window.DB.authedReorder('clients', ids);
+    await renderClientsEditor();
+    toast('Order saved');
+  });
 }
 
-function openClientForm(idx) {
-  editingClientIdx = idx;
-  clientImg = '';
-  const items = window.IA_STORE.getTestimonials();
-  const item = idx !== null ? items[idx] : {};
+function openClientForm(id) {
+  editingClientId = id;
+  clientImgFile = null;
+  clientImgPreview = '';
+  const item = id ? (clientItems.find(c => c.id === id) || {}) : {};
   clientFeatured = item.featured || false;
-  if (item.photo) clientImg = item.photo;
+  if (item.photo) clientImgPreview = item.photo;
 
   const programs = ['Adult Training','Athlete Training','Youth Training','Semi-Private Training'];
   document.getElementById('client-form-area').innerHTML = `
     <div class="form-section">
-      <div class="form-section-title">${idx !== null ? 'Edit' : 'New'} client</div>
+      <div class="form-section-title">${id ? 'Edit' : 'New'} client</div>
       <div class="field-row">
         <div class="field"><label>Name</label><input type="text" id="cf-name" value="${esc(item.name||'')}" placeholder="e.g. Mike R."></div>
         <div class="field"><label>Subtitle</label><input type="text" id="cf-sub" value="${esc(item.subtitle||'')}" placeholder="2 years · Adult Training"></div>
@@ -311,134 +372,132 @@ function openClientForm(idx) {
     this.classList.toggle('on', clientFeatured);
     renderPreview();
   });
-  setupImg('cf-img', 'cf-preview', 'cf-thumb', src => { clientImg = src; renderPreview(); });
+  setupImg('cf-img', 'cf-preview', 'cf-thumb', (preview, file) => {
+    clientImgPreview = preview;
+    clientImgFile = file;
+    renderPreview();
+  });
   ['cf-name','cf-sub','cf-quote'].forEach(id => { const el=document.getElementById(id); if(el) el.addEventListener('input', renderPreview); });
   document.getElementById('cf-prog').addEventListener('change', renderPreview);
   document.getElementById('client-form-area').scrollIntoView({ behavior:'smooth' });
 }
 
-function saveClient() {
+async function saveClient() {
   const name = document.getElementById('cf-name').value.trim();
   if (!name) { alert('Please enter a name.'); return; }
-  const items = window.IA_STORE.getTestimonials();
-  if (clientFeatured) items.forEach(t => t.featured = false);
-  const item = {
-    id: editingClientIdx !== null ? (items[editingClientIdx].id||Date.now()) : Date.now(),
+
+  let photoUrl = editingClientId ? (clientItems.find(c=>c.id===editingClientId)||{}).photo || '' : '';
+
+  if (clientImgFile) {
+    toast('Uploading photo…');
+    const url = await window.DB.uploadImage('images', clientImgFile);
+    if (url) photoUrl = url;
+  }
+
+  // Only one featured at a time
+  if (clientFeatured) {
+    for (const c of clientItems) {
+      if (c.featured && c.id !== editingClientId) {
+        await window.DB.authedUpdate('clients', c.id, { featured: false });
+      }
+    }
+  }
+
+  const data = {
     name,
     subtitle: document.getElementById('cf-sub').value.trim(),
     program: document.getElementById('cf-prog').value,
     quote: document.getElementById('cf-quote').value.trim(),
-    photo: clientImg,
+    photo: photoUrl,
     featured: clientFeatured
   };
-  if (editingClientIdx !== null) items[editingClientIdx] = item;
-  else items.push(item);
-  window.IA_STORE.saveTestimonials(items);
-  editingClientIdx = null; clientImg = ''; clientFeatured = false;
-  renderClientsEditor(); renderPreview();
+
+  if (editingClientId) {
+    await window.DB.authedUpdate('clients', editingClientId, data);
+  } else {
+    data.sort_order = clientItems.length;
+    await window.DB.authedInsert('clients', data);
+  }
+
+  editingClientId = null; clientImgFile = null; clientImgPreview = ''; clientFeatured = false;
+  await renderClientsEditor();
+  renderPreview();
   toast('Client saved ✓');
 }
 
-function deleteClient(i) {
+async function deleteClient(id) {
   if (!confirm('Delete this client?')) return;
-  const items = window.IA_STORE.getTestimonials();
-  items.splice(i, 1);
-  window.IA_STORE.saveTestimonials(items);
-  renderClientsEditor(); renderPreview();
+  await window.DB.authedDelete('clients', id);
+  await renderClientsEditor();
+  renderPreview();
   toast('Deleted');
 }
 
 // ════════════════════════════
 //  BIO
 // ════════════════════════════
-function renderBioEditor() {
-  const bio = window.IA_STORE.getBio();
-  document.getElementById('editor-body').innerHTML = `
-    <p style="font-size:11px;color:#555;line-height:1.6;margin-bottom:1rem;">
-      Edit John's bio here. Changes appear on the About page instantly. Use the preview panel to see exactly how it looks before saving.
-    </p>
+let bioData = {};
 
+async function renderBioEditor() {
+  document.getElementById('editor-body').innerHTML = `<div class="empty-msg" style="color:#555;">Loading…</div>`;
+  const row = await window.DB.getSingle('settings', 'bio');
+  bioData = row ? (row.value || {}) : {};
+
+  const defaults = {
+    intro1: "John has been training clients on Long Island for over 15 years — from 7-year-old youth athletes to adults in their 80s. Every program is built from scratch for the person in front of him.",
+    intro2: "All of his clients are unique and have different goals, so training programs and nutritional counseling are catered to each person's individual needs.",
+    experience: "15+ years training clients on Long Island",
+    clientRange: "Ages 7–85 · Beginner to professional athlete",
+    specialties: "Strength training · Youth athletics · Athletic performance · Older adults · Nutritional counseling",
+    location: "Long Island, NY",
+    storyP1: "John started his career with a different plan. After college and moving toward a teaching job — the expected, safe route — he had a moment of clarity. He walked away from it and went all-in on fitness.",
+    storyP2: "The name Intent Athletics comes from that shift. Training with intent means knowing what you're doing, why you're doing it, and having a plan that makes sense for you specifically.",
+    pullquote: "My goal is to help people understand how to train and take better care of their bodies — and to cut through an industry full of things that don't make sense.",
+    storyP3: "You do not have to be, or have ever been, an athlete to take care of your body and train like one. All you need is a good plan, a positive attitude, and the willingness to work hard.",
+    storyP4: "If you're a person with a goal of making yourself move, look, and feel better — you're most likely the right fit."
+  };
+  Object.keys(defaults).forEach(k => { if (!bioData[k]) bioData[k] = defaults[k]; });
+
+  document.getElementById('editor-body').innerHTML = `
+    <p style="font-size:11px;color:#555;line-height:1.6;margin-bottom:1rem;">Changes save to the database and go live for all visitors instantly when you hit Save.</p>
     <div class="form-section">
       <div class="form-section-title">Intro paragraphs</div>
-      <div class="field">
-        <label>First paragraph</label>
-        <textarea id="bio-intro1" oninput="renderBioPreview()">${esc(bio.intro1||'')}</textarea>
-      </div>
-      <div class="field">
-        <label>Second paragraph</label>
-        <textarea id="bio-intro2" oninput="renderBioPreview()">${esc(bio.intro2||'')}</textarea>
-      </div>
+      <div class="field"><label>First paragraph</label><textarea id="bio-intro1" oninput="renderBioPreview()">${esc(bioData.intro1)}</textarea></div>
+      <div class="field"><label>Second paragraph</label><textarea id="bio-intro2" oninput="renderBioPreview()">${esc(bioData.intro2)}</textarea></div>
     </div>
-
     <div class="form-section" style="margin-top:1rem;">
       <div class="form-section-title">Quick facts card</div>
-      <div class="field">
-        <label>Experience</label>
-        <input type="text" id="bio-experience" value="${esc(bio.experience||'')}" oninput="renderBioPreview()">
-      </div>
-      <div class="field">
-        <label>Client range</label>
-        <input type="text" id="bio-clientRange" value="${esc(bio.clientRange||'')}" oninput="renderBioPreview()">
-      </div>
-      <div class="field">
-        <label>Specialties</label>
-        <input type="text" id="bio-specialties" value="${esc(bio.specialties||'')}" oninput="renderBioPreview()">
-      </div>
-      <div class="field">
-        <label>Location</label>
-        <input type="text" id="bio-location" value="${esc(bio.location||'')}" oninput="renderBioPreview()">
-      </div>
+      <div class="field"><label>Experience</label><input type="text" id="bio-experience" value="${esc(bioData.experience)}" oninput="renderBioPreview()"></div>
+      <div class="field"><label>Client range</label><input type="text" id="bio-clientRange" value="${esc(bioData.clientRange)}" oninput="renderBioPreview()"></div>
+      <div class="field"><label>Specialties</label><input type="text" id="bio-specialties" value="${esc(bioData.specialties)}" oninput="renderBioPreview()"></div>
+      <div class="field"><label>Location</label><input type="text" id="bio-location" value="${esc(bioData.location)}" oninput="renderBioPreview()"></div>
     </div>
-
     <div class="form-section" style="margin-top:1rem;">
       <div class="form-section-title">Story section</div>
-      <div class="field">
-        <label>Story paragraph 1</label>
-        <textarea id="bio-storyP1" oninput="renderBioPreview()">${esc(bio.storyP1||'')}</textarea>
-      </div>
-      <div class="field">
-        <label>Story paragraph 2</label>
-        <textarea id="bio-storyP2" oninput="renderBioPreview()">${esc(bio.storyP2||'')}</textarea>
-      </div>
-      <div class="field">
-        <label>Pull quote (the highlighted quote in the middle)</label>
-        <textarea id="bio-pullquote" style="min-height:60px;" oninput="renderBioPreview()">${esc(bio.pullquote||'')}</textarea>
-      </div>
-      <div class="field">
-        <label>Story paragraph 3</label>
-        <textarea id="bio-storyP3" oninput="renderBioPreview()">${esc(bio.storyP3||'')}</textarea>
-      </div>
-      <div class="field">
-        <label>Story paragraph 4</label>
-        <textarea id="bio-storyP4" oninput="renderBioPreview()">${esc(bio.storyP4||'')}</textarea>
-      </div>
+      <div class="field"><label>Paragraph 1</label><textarea id="bio-storyP1" oninput="renderBioPreview()">${esc(bioData.storyP1)}</textarea></div>
+      <div class="field"><label>Paragraph 2</label><textarea id="bio-storyP2" oninput="renderBioPreview()">${esc(bioData.storyP2)}</textarea></div>
+      <div class="field"><label>Pull quote</label><textarea id="bio-pullquote" style="min-height:60px;" oninput="renderBioPreview()">${esc(bioData.pullquote)}</textarea></div>
+      <div class="field"><label>Paragraph 3</label><textarea id="bio-storyP3" oninput="renderBioPreview()">${esc(bioData.storyP3)}</textarea></div>
+      <div class="field"><label>Paragraph 4</label><textarea id="bio-storyP4" oninput="renderBioPreview()">${esc(bioData.storyP4)}</textarea></div>
     </div>
-
     <div class="btn-row" style="margin-top:1rem;">
       <button class="save-btn" onclick="saveBio()">Save bio</button>
-      <button class="cancel-btn" onclick="renderBioEditor();renderBioPreview();">Reset</button>
     </div>`;
 }
 
-function saveBio() {
+async function saveBio() {
   const fields = ['intro1','intro2','experience','clientRange','specialties','location','storyP1','storyP2','pullquote','storyP3','storyP4'];
   const bio = {};
-  fields.forEach(f => {
-    const el = document.getElementById('bio-' + f);
-    if (el) bio[f] = el.value.trim();
-  });
-  window.IA_STORE.saveBio(bio);
-  toast('Bio saved ✓');
+  fields.forEach(f => { const el=document.getElementById('bio-'+f); if(el) bio[f]=el.value.trim(); });
+  await window.DB.authedUpsertSetting('bio', bio);
+  bioData = bio;
+  toast('Bio saved ✓ — live for all visitors');
 }
 
 function renderBioPreview() {
   const fields = ['intro1','intro2','experience','clientRange','specialties','location','storyP1','storyP2','pullquote','storyP3','storyP4'];
   const bio = {};
-  fields.forEach(f => {
-    const saved = window.IA_STORE.getBio();
-    const el = document.getElementById('bio-' + f);
-    bio[f] = el ? el.value : (saved[f] || '');
-  });
+  fields.forEach(f => { const el=document.getElementById('bio-'+f); bio[f]=el?el.value:(bioData[f]||''); });
 
   document.getElementById('preview-body').innerHTML = `
     <div style="padding:2.5rem;border-bottom:1px solid var(--border);background:var(--off);">
@@ -447,20 +506,14 @@ function renderBioPreview() {
       <p style="font-size:14px;color:var(--ink-3);line-height:1.85;margin-bottom:1rem;font-weight:300;">${bio.intro1}</p>
       <p style="font-size:14px;color:var(--ink-3);line-height:1.85;font-weight:300;">${bio.intro2}</p>
       <div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:1.5rem;">
-        ${[
-          ['Experience', bio.experience],
-          ['Client range', bio.clientRange],
-          ['Specialties', bio.specialties],
-          ['Location', bio.location]
-        ].map(([l,v]) => `
+        ${[['Experience',bio.experience],['Client range',bio.clientRange],['Specialties',bio.specialties],['Location',bio.location]].map(([l,v])=>`
           <div style="padding:0.9rem 1.2rem;border-bottom:1px solid var(--border);display:flex;gap:1rem;">
             <span style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--ink-4);min-width:90px;flex-shrink:0;padding-top:2px;">${l}</span>
             <span style="font-size:13px;color:var(--ink-3);font-weight:300;">${v}</span>
           </div>`).join('')}
       </div>
     </div>
-    <div style="padding:2.5rem;border-bottom:1px solid var(--border);">
-      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-4);margin-bottom:1rem;">The story</div>
+    <div style="padding:2.5rem;">
       <div style="font-family:var(--font-display);font-size:28px;font-weight:400;color:var(--ink);line-height:1.1;margin-bottom:1.5rem;">Training with <em style="font-style:italic;color:var(--ink-3);">purpose.</em></div>
       <p style="font-size:14px;color:var(--ink-3);line-height:1.9;margin-bottom:1rem;font-weight:300;">${bio.storyP1}</p>
       <p style="font-size:14px;color:var(--ink-3);line-height:1.9;margin-bottom:1.5rem;font-weight:300;">${bio.storyP2}</p>
@@ -473,146 +526,59 @@ function renderBioPreview() {
 }
 
 // ════════════════════════════
-//  SETTINGS
+//  LIVE PREVIEW — MERCH
 // ════════════════════════════
-function renderSettingsEditor() {
-  document.getElementById('editor-body').innerHTML = `
-    <div class="form-section">
-      <div class="form-section-title">Change password</div>
-      <div class="field"><label>New password</label><input type="password" id="new-pass" placeholder="Min 8 characters"></div>
-      <div class="field"><label>Confirm password</label><input type="password" id="confirm-pass" placeholder="Repeat password"></div>
-      <div class="btn-row"><button class="save-btn" onclick="changePass()">Update password</button></div>
-    </div>
-    <div class="form-section" style="margin-top:1rem;">
-      <div class="form-section-title">Backup data</div>
-      <p style="font-size:12px;color:#555;margin-bottom:1rem;line-height:1.6;">Export all your content as a JSON file. Import it on any device to restore everything.</p>
-      <div class="btn-row">
-        <button class="save-btn" onclick="exportData()">Export backup</button>
-        <button class="cancel-btn" onclick="document.getElementById('import-file').click()">Import</button>
-        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
-      </div>
-    </div>`;
-}
+async function renderMerchPreview() {
+  let items = [...merchItems];
+  const liveN = document.getElementById('mf-name');
+  if (liveN) {
+    const liveItem = { name: liveN.value||'New item', price: (document.getElementById('mf-price')||{}).value||'', image: merchImgPreview };
+    if (editingMerchId) items = items.map(m => m.id===editingMerchId ? {...m,...liveItem} : m);
+    else items = [...items, liveItem];
+  }
 
-function changePass() {
-  const np = document.getElementById('new-pass').value;
-  const cp = document.getElementById('confirm-pass').value;
-  if (!np || np.length < 8) { alert('Password must be at least 8 characters.'); return; }
-  if (np !== cp) { alert('Passwords do not match.'); return; }
-  localStorage.setItem('ia_admin_pass', np);
-  document.getElementById('new-pass').value = '';
-  document.getElementById('confirm-pass').value = '';
-  toast('Password updated ✓');
-}
-
-function exportData() {
-  const data = { merch: window.IA_STORE.getMerch(), testimonials: window.IA_STORE.getTestimonials(), exported: new Date().toISOString() };
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
-  a.download = 'intent-athletics-data.json';
-  a.click();
-  toast('Exported ✓');
-}
-
-function importData(input) {
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const d = JSON.parse(e.target.result);
-      if (d.merch) window.IA_STORE.saveMerch(d.merch);
-      if (d.testimonials) window.IA_STORE.saveTestimonials(d.testimonials);
-      renderEditor(); renderPreview();
-      toast('Imported ✓');
-    } catch { alert('Invalid file.'); }
-  };
-  reader.readAsText(input.files[0]);
-}
-
-// ════════════════════════════
-//  LIVE PREVIEW RENDERERS
-// ════════════════════════════
-function getLiveMerchItem() {
-  const n = document.getElementById('mf-name');
-  if (!n) return null;
-  return { name: n.value||'New item', price: (document.getElementById('mf-price')||{}).value||'', image: merchImg };
-}
-
-function getLiveClientItem() {
-  const n = document.getElementById('cf-name');
-  if (!n) return null;
-  return { name: n.value||'Client Name', subtitle: (document.getElementById('cf-sub')||{}).value||'', quote: (document.getElementById('cf-quote')||{}).value||'', program: (document.getElementById('cf-prog')||{}).value||'Adult Training', photo: clientImg, featured: clientFeatured };
-}
-
-function renderMerchPreview() {
-  let items = [...window.IA_STORE.getMerch()];
-  const live = getLiveMerchItem();
-  if (live) { if (editingMerchIdx!==null) items[editingMerchIdx]=live; else items=[...items,live]; }
-
-  const settings = window.IA_STORE.getMerchSettings();
-  const mode = settings.mode || 'coming_soon';
+  const settingRow = await window.DB.getSingle('settings','merch_settings');
+  const ms = settingRow ? (settingRow.value||{}) : {};
+  const modeEl = document.getElementById('merch-mode-select');
+  const mode = modeEl ? modeEl.value : (ms.mode||'coming_soon');
   const pb = document.getElementById('preview-body');
 
   if (mode === 'coming_soon') {
-    pb.innerHTML = `
-      <div class="pv-section" style="text-align:center;padding:4rem 2rem;background:var(--off);">
-        <div style="display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:99px;margin-bottom:1.5rem;">
-          <span style="width:6px;height:6px;border-radius:50%;background:#7aba2a;display:inline-block;"></span>
-          Coming Soon
-        </div>
-        <div style="font-family:var(--font-display);font-size:52px;color:var(--ink);line-height:1;margin-bottom:1rem;">Intent<br><em style="font-style:italic;color:var(--ink-3);">Athletics</em></div>
-        <div style="font-size:14px;color:var(--ink-3);margin-bottom:1.5rem;">Merch is on the way. Drop your email and we'll let you know when it's live.</div>
-        <div style="display:flex;gap:8px;justify-content:center;max-width:340px;margin:0 auto;">
-          <div style="flex:1;background:#fff;border:1.5px solid var(--border);border-radius:99px;padding:9px 16px;font-size:13px;color:var(--ink-4);">your@email.com</div>
-          <div style="background:var(--ink);color:#fff;font-size:12px;font-weight:500;padding:9px 18px;border-radius:99px;white-space:nowrap;">Notify me</div>
-        </div>
-      </div>`;
-    return;
+    pb.innerHTML = `<div class="pv-section" style="text-align:center;padding:4rem 2rem;background:var(--off);">
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;border-radius:99px;margin-bottom:1.5rem;"><span style="width:6px;height:6px;border-radius:50%;background:#7aba2a;display:inline-block;"></span>Coming Soon</div>
+      <div style="font-family:var(--font-display);font-size:52px;color:var(--ink);line-height:1;margin-bottom:1rem;">Intent<br><em style="font-style:italic;color:var(--ink-3);">Athletics</em></div>
+      <div style="font-size:14px;color:var(--ink-3);">Merch is on the way.</div>
+    </div>`; return;
   }
-
   if (mode === 'release_date') {
-    const dateStr = settings.releaseDate || '';
-    const dateLabel = dateStr ? new Date(dateStr+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'TBD';
-    pb.innerHTML = `
-      <div class="pv-section" style="text-align:center;padding:4rem 2rem;background:#111110;color:#fff;">
-        <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:1.2rem;">Intent Athletics · Dropping Soon</div>
-        <div style="font-family:var(--font-display);font-size:52px;color:#fff;line-height:1;margin-bottom:1rem;">Merch<br><em style="font-style:italic;color:rgba(255,255,255,0.35);">is coming.</em></div>
-        <div style="font-size:14px;color:rgba(255,255,255,0.35);margin-bottom:2rem;">The Intent Athletics store launches on ${dateLabel}.</div>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:2rem;">
-          ${['Days','Hours','Mins','Secs'].map(l=>`
-            <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.2rem 1.4rem;min-width:80px;">
-              <div style="font-family:var(--font-display);font-size:40px;color:#fff;line-height:1;">--</div>
-              <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-top:5px;">${l}</div>
-            </div>`).join('')}
-        </div>
-        <div style="background:#fff;color:#111;font-size:12px;font-weight:600;padding:11px 24px;border-radius:99px;display:inline-block;">Visit current store</div>
-      </div>`;
-    return;
+    const dateEl = document.getElementById('merch-release-date');
+    const d = dateEl ? dateEl.value : (ms.releaseDate||'');
+    const label = d ? new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : 'TBD';
+    pb.innerHTML = `<div class="pv-section" style="text-align:center;padding:4rem 2rem;background:#111110;color:#fff;">
+      <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:1.2rem;">Dropping Soon</div>
+      <div style="font-family:var(--font-display);font-size:52px;color:#fff;line-height:1;margin-bottom:1rem;">Merch<br><em style="font-style:italic;color:rgba(255,255,255,0.35);">is coming.</em></div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:2rem;">Launches ${label}</div>
+    </div>`; return;
   }
-
-  // Live mode
-  if (!items.length) {
-    pb.innerHTML = `<div class="pv-section" style="text-align:center;padding:3rem;"><div class="pv-empty">Add items using the + Add button above to see them here.</div></div>`;
-    return;
-  }
-  pb.innerHTML = `<div class="pv-section">
-    <span class="pv-eyebrow">Merch</span>
-    <div class="pv-h2">Intent <em>Athletics</em></div>
-    <div class="pv-merch-grid">
-      ${items.map(item=>`<div class="pv-merch-card">
-        <div class="pv-merch-img">${item.image?`<img src="${item.image}" alt="">`:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ddd" stroke-width="1"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>'}</div>
-        <div class="pv-merch-body">
-          <div class="pv-merch-name">${item.name}</div>
-          <div class="pv-merch-price">${item.price?'$'+item.price:''}</div>
-        </div>
-      </div>`).join('')}
-    </div>
-  </div>`;
+  if (!items.length) { pb.innerHTML=`<div class="pv-section"><div class="pv-empty">Add items using + Add above.</div></div>`; return; }
+  pb.innerHTML = `<div class="pv-section"><span class="pv-eyebrow">Merch</span><div class="pv-h2">Intent <em>Athletics</em></div>
+    <div class="pv-merch-grid">${items.map(item=>`<div class="pv-merch-card">
+      <div class="pv-merch-img">${item.image?`<img src="${item.image}" alt="">`:svgBox()}</div>
+      <div class="pv-merch-body"><div class="pv-merch-name">${item.name}</div><div class="pv-merch-price">${item.price?'$'+item.price:''}</div></div>
+    </div>`).join('')}</div></div>`;
 }
 
+// ════════════════════════════
+//  LIVE PREVIEW — CLIENTS
+// ════════════════════════════
 function renderClientsPreview() {
-  let items = [...window.IA_STORE.getTestimonials()];
-  const live = getLiveClientItem();
-  if (live) { if (editingClientIdx!==null) { items=items.map((t,i)=>i===editingClientIdx?live:t); } else items=[...items,live]; }
+  let items = [...clientItems];
+  const liveN = document.getElementById('cf-name');
+  if (liveN) {
+    const liveItem = { name: liveN.value||'Client Name', subtitle:(document.getElementById('cf-sub')||{}).value||'', quote:(document.getElementById('cf-quote')||{}).value||'', program:(document.getElementById('cf-prog')||{}).value||'Adult Training', photo:clientImgPreview, featured:clientFeatured };
+    if (editingClientId) items = items.map(c => c.id===editingClientId ? {...c,...liveItem} : c);
+    else items = [...items, liveItem];
+  }
 
   const pb = document.getElementById('preview-body');
   if (!items.length) { pb.innerHTML=`<div class="pv-section"><div class="pv-empty">Add a client to see the preview.</div></div>`; return; }
@@ -629,7 +595,6 @@ function renderClientsPreview() {
       ${featured.quote?`<div class="pv-quote">"${featured.quote}"</div>`:''}
     </div>
   </div>`;
-
   if (rest.length) {
     html += `<div class="pv-clients-grid">${rest.map(t=>`<div class="pv-client-card">
       <div class="pv-client-photo">${t.photo?`<img src="${t.photo}" alt="">`:'<div style="height:160px;background:var(--surface);"></div>'}</div>
@@ -644,8 +609,29 @@ function renderClientsPreview() {
   pb.innerHTML = html;
 }
 
+// ════════════════════════════
+//  SETTINGS
+// ════════════════════════════
+async function renderSettingsEditor() {
+  const user = JSON.parse(sessionStorage.getItem('ia_user')||'{}');
+  document.getElementById('editor-body').innerHTML = `
+    <div class="form-section">
+      <div class="form-section-title">Logged in as</div>
+      <p style="font-size:13px;color:#888;">${user.email||'—'}</p>
+    </div>
+    <div class="form-section" style="margin-top:1rem;">
+      <div class="form-section-title">Contact submissions</div>
+      <p style="font-size:12px;color:#555;margin-bottom:1rem;line-height:1.6;">View all contact form submissions from visitors. Go to your Supabase dashboard → Table Editor → contacts to see them all.</p>
+      <a href="https://supabase.com/dashboard" target="_blank" class="save-btn" style="display:inline-block;text-decoration:none;text-align:center;">Open Supabase dashboard</a>
+    </div>
+    <div class="form-section" style="margin-top:1rem;">
+      <div class="form-section-title">Change password</div>
+      <p style="font-size:12px;color:#555;margin-bottom:1rem;line-height:1.6;">To change John's admin password, go to Supabase → Authentication → Users → click John's email → Send password reset email.</p>
+    </div>`;
+}
+
 // ── UTILS ──
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 function svgEdit() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>'; }
 function svgTrash() { return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'; }
 function svgBox() { return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>'; }

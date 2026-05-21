@@ -1,46 +1,55 @@
 // ─────────────────────────────────────────────
-//  Intent Athletics — Shared Data Store
-//  All site content editable from admin.html
+//  Intent Athletics — Public Data Fetcher
+//  Reads from Supabase for all public pages
 // ─────────────────────────────────────────────
+const SUPABASE_URL  = 'https://xbngqjgequangifsiori.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhibmdxamdlcXVhbmdpZnNpb3JpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODg3OTksImV4cCI6MjA5NDk2NDc5OX0.OAZsQqzsILHP6iS5DatxiIQbLFW-b69OyL02v1Ww5c8';
+
 const IA_STORE = {
-  load(key) {
+  _h: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` },
+
+  async getTestimonials() {
     try {
-      const saved = localStorage.getItem('ia_' + key);
-      return saved ? JSON.parse(saved) : null;
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/clients?order=sort_order.asc,created_at.asc`, { headers: this._h });
+      return r.ok ? r.json() : [];
+    } catch { return []; }
+  },
+
+  async getMerch() {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/merch?order=sort_order.asc,created_at.asc`, { headers: this._h });
+      return r.ok ? r.json() : [];
+    } catch { return []; }
+  },
+
+  async getMerchSettings() {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.merch_settings&limit=1`, { headers: this._h });
+      if (!r.ok) return { mode: 'coming_soon', releaseDate: '' };
+      const rows = await r.json();
+      return rows[0]?.value || { mode: 'coming_soon', releaseDate: '' };
+    } catch { return { mode: 'coming_soon', releaseDate: '' }; }
+  },
+
+  async getBio() {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/settings?key=eq.bio&limit=1`, { headers: this._h });
+      if (!r.ok) return null;
+      const rows = await r.json();
+      return rows[0]?.value || null;
     } catch { return null; }
   },
 
-  save(key, data) {
-    try { localStorage.setItem('ia_' + key, JSON.stringify(data)); return true; }
-    catch { return false; }
-  },
-
-  getMerch()           { return this.load('merch') || []; },
-  saveMerch(d)         { return this.save('merch', d); },
-
-  getTestimonials()    { return this.load('testimonials') || []; },
-  saveTestimonials(d)  { return this.save('testimonials', d); },
-
-  getMerchSettings()   { return this.load('merch_settings') || { mode: 'coming_soon', releaseDate: '' }; },
-  saveMerchSettings(d) { return this.save('merch_settings', d); },
-
-  // Bio — everything on the About page John can edit
-  getBio() {
-    return this.load('bio') || {
-      intro1: "John has been training clients on Long Island for over 15 years — from 7-year-old youth athletes to adults in their 80s. Every program is built from scratch for the person in front of him.",
-      intro2: "All of his clients are unique and have different goals, so training programs and nutritional counseling are catered to each person's individual needs.",
-      experience: "15+ years training clients on Long Island",
-      clientRange: "Ages 7–85 · Beginner to professional athlete",
-      specialties: "Strength training · Youth athletics · Athletic performance · Older adults · Nutritional counseling",
-      location: "Long Island, NY",
-      storyP1: "John started his career with a different plan. After college and moving toward a teaching job — the expected, safe route — he had a moment of clarity. He walked away from it and went all-in on fitness. Not because it was easy, but because it was right.",
-      storyP2: "The name Intent Athletics comes from that shift. Training with intent means knowing what you're doing, why you're doing it, and having a plan that makes sense for you specifically — not something recycled from someone else.",
-      pullquote: "My goal is to help people understand how to train and take better care of their bodies — and to cut through an industry full of things that don't make sense.",
-      storyP3: "You do not have to be, or have ever been, an athlete to take care of your body and train like one. All you need is a good plan, a positive attitude, and the willingness to work hard.",
-      storyP4: "If you're a person with a goal of making yourself move, look, and feel better — you're most likely the right fit.",
-    };
-  },
-  saveBio(d) { return this.save('bio', d); },
+  async submitContact(data) {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/contacts`, {
+        method: 'POST',
+        headers: { ...this._h, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(data)
+      });
+      return r.ok;
+    } catch { return false; }
+  }
 };
 
 window.IA_STORE = IA_STORE;
