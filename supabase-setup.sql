@@ -114,7 +114,7 @@ insert into public.settings (key, value) values
     "experience": "15+ years training clients on Long Island",
     "clientRange": "Ages 7–85 · Beginner to professional athlete",
     "specialties": "Strength training · Youth athletics · Athletic performance · Older adults · Nutritional counseling",
-    "location": "Long Island, NY",
+    "location": "Farmingdale, NY",
     "storyP1": "John started his career with a different plan. After college and moving toward a teaching job — the expected, safe route — he had a moment of clarity. He walked away from it and went all-in on fitness. Not because it was easy, but because it was right.",
     "storyP2": "The name Intent Athletics comes from that shift. Training with intent means knowing what you''re doing, why you''re doing it, and having a plan that makes sense for you specifically — not something recycled from someone else.",
     "pullquote": "My goal is to help people understand how to train and take better care of their bodies — and to cut through an industry full of things that don''t make sense.",

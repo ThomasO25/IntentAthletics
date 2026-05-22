@@ -12,6 +12,8 @@
   --ink-4: #a8a5a1;
   --green: #4a7a14;
   --green-bg: #f0f6e8;
+  --sage: #6b9e6b;
+  --sage-light: #f0f6f0;
   --radius-pill: 99px;
   --radius-card: 16px;
   --radius-sm: 10px;
@@ -72,8 +74,8 @@ body {
   letter-spacing: 0.2px;
 }
 
-.nav-links a:hover { color: var(--ink); }
-.nav-links a.active { color: var(--ink); font-weight: 500; }
+.nav-links a:hover { color: var(--sage); }
+.nav-links a.active { color: var(--sage); font-weight: 500; }
 
 .nav-dropdown { position: relative; }
 
@@ -105,7 +107,7 @@ body {
 }
 
 .nav-dropdown-menu a:last-child { border-bottom: none; }
-.nav-dropdown-menu a:hover { background: var(--off); color: var(--ink); }
+.nav-dropdown-menu a:hover { background: var(--sage-light); color: var(--sage); }
 
 .nav-dropdown > a::after {
   content: ' ↓';

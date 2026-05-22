@@ -74,7 +74,7 @@ function buildFooterHTML(programs) {
     <div class="footer-logo">
       <img src="${prefix}${LOGO_URL}" alt="Intent Athletics"
         onerror="this.outerHTML='<span style=\\'font-family:var(--font-display);font-size:18px;color:#fff;\\'>Intent Athletics</span>'">
-      <p class="footer-desc">Personal training on Long Island, NY. Programs built around you — your goals, your body, your schedule.</p>
+      <p class="footer-desc">Personal training in Farmingdale, NY. Programs built around you — your goals, your body, your schedule.</p>
     </div>
     <div class="footer-cols">
       <div>
@@ -102,7 +102,7 @@ function buildFooterHTML(programs) {
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 Intent Athletics · Long Island, NY</span>
+    <span>© 2026 Intent Athletics · Farmingdale, NY</span>
     <a href="${INSTA_URL}" target="_blank">@intentathletics.li</a>
   </div>
 </footer>`;

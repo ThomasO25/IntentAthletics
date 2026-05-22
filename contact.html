@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Contact — Intent Athletics</title>
-  <meta name="description" content="Get in touch with John Dunlop at Intent Athletics. Personal training on Long Island, NY.">
+  <meta name="description" content="Get in touch with John Dunlop at Intent Athletics. Personal training on Farmingdale, NY.">
   <link rel="icon" href="images/favicon.ico">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
@@ -165,11 +165,7 @@
           <label for="interest">Interested in</label>
           <select id="interest" name="interest">
             <option value="">Select a program</option>
-            <option value="adult">Adult Training</option>
-            <option value="athlete">Athlete Training</option>
-            <option value="youth">Youth Training</option>
-            <option value="semi-private">Semi-Private Training</option>
-            <option value="unsure">Not sure yet</option>
+            <option value="Not sure yet">Not sure yet</option>
           </select>
         </div>
         <div class="form-group">
@@ -185,7 +181,7 @@
     <div class="info-side">
       <div class="info-item">
         <div class="info-label">Location</div>
-        <div class="info-val">Long Island, NY</div>
+        <div class="info-val">Farmingdale, NY</div>
       </div>
       <div class="info-item">
         <div class="info-label">Instagram</div>
@@ -212,39 +208,89 @@
 <script src="js/store.js"></script>
 <script src="js/components.js"></script>
 <script>
-  const form = document.getElementById('contact-form');
+document.addEventListener('DOMContentLoaded', async () => {
+
+  // ── Populate interest dropdown from Supabase training programs ──
+  const select = document.getElementById('interest');
+  try {
+    const programs = await window.IA_STORE.getTraining();
+    if (programs && programs.length) {
+      // Clear default options except the first blank one
+      select.innerHTML = '<option value="">Select a program</option>';
+      programs.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.title;
+        opt.textContent = p.title;
+        select.appendChild(opt);
+      });
+      // Always add "Not sure yet" at the bottom
+      const notSure = document.createElement('option');
+      notSure.value = 'Not sure yet';
+      notSure.textContent = 'Not sure yet';
+      select.appendChild(notSure);
+    }
+  } catch (e) {
+    // If Supabase is unreachable, fallback options stay
+    console.warn('Could not load training programs for dropdown:', e);
+  }
+
+  // ── Contact form submission to Supabase ──
+  const form    = document.getElementById('contact-form');
   const success = document.getElementById('success-msg');
 
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = form.querySelector('button[type="submit"]');
+
+    // Basic validation
+    const email = document.getElementById('email').value.trim();
+    const fname = document.getElementById('fname').value.trim();
+    if (!fname || !email) {
+      success.textContent = 'Please fill in your name and email.';
+      success.style.background = '#fef2f2';
+      success.style.borderColor = '#fecaca';
+      success.style.color = '#b91c1c';
+      success.style.display = 'block';
+      return;
+    }
+
     btn.textContent = 'Sending…';
     btn.disabled = true;
 
     const data = {
-      first_name: document.getElementById('fname').value.trim(),
+      first_name: fname,
       last_name:  document.getElementById('lname').value.trim(),
-      email:      document.getElementById('email').value.trim(),
+      email,
       phone:      document.getElementById('phone').value.trim(),
       interest:   document.getElementById('interest').value,
       message:    document.getElementById('message').value.trim()
     };
 
     const ok = await window.IA_STORE.submitContact(data);
+
     btn.textContent = 'Send message';
     btn.disabled = false;
 
     if (ok) {
+      // Reset to green success state
+      success.textContent = 'Message sent — John will be in touch within 1–2 business days.';
+      success.style.background = '#f0f7e8';
+      success.style.borderColor = '#c0dfa0';
+      success.style.color = '#4a7a14';
       success.style.display = 'block';
       form.reset();
+      // Re-populate dropdown after reset clears it
+      select.value = '';
     } else {
-      success.textContent = 'Something went wrong — please try again or email us directly.';
+      success.textContent = 'Something went wrong — please try again or reach out on Instagram @intentathletics.li';
       success.style.background = '#fef2f2';
       success.style.borderColor = '#fecaca';
       success.style.color = '#b91c1c';
       success.style.display = 'block';
     }
   });
+
+});
 </script>
 </body>
 </html>
