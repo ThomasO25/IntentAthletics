@@ -235,7 +235,7 @@
         </div>
         <div class="form-group">
           <label for="phone">Phone <span style="font-weight:300;text-transform:none;letter-spacing:0;">(optional)</span></label>
-          <input type="tel" id="phone" name="phone" placeholder="(516) 555-0100">
+          <input type="tel" id="phone" name="phone" placeholder="(516) 555-0100" maxlength="14" inputmode="numeric">
         </div>
         <div class="form-group">
           <label for="interest">Interested in</label>
@@ -286,12 +286,40 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
 
+  // ── Phone number auto-formatter ──
+  // Formats to (XXX) XXX-XXXX as the user types regardless of input style
+  const phoneInput = document.getElementById('phone');
+  phoneInput.addEventListener('input', function(e) {
+    // Strip everything except digits
+    const digits = this.value.replace(/\D/g, '').substring(0, 10);
+    let formatted = '';
+    if (digits.length === 0) {
+      formatted = '';
+    } else if (digits.length <= 3) {
+      formatted = `(${digits}`;
+    } else if (digits.length <= 6) {
+      formatted = `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+    } else {
+      formatted = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+    }
+    this.value = formatted;
+  });
+
+  // Also format on paste
+  phoneInput.addEventListener('paste', function() {
+    setTimeout(() => {
+      const digits = this.value.replace(/\D/g, '').substring(0, 10);
+      if (digits.length === 10) {
+        this.value = `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+      }
+    }, 0);
+  });
+
   // ── Populate interest dropdown from Supabase training programs ──
   const select = document.getElementById('interest');
   try {
     const programs = await window.IA_STORE.getTraining();
     if (programs && programs.length) {
-      // Clear default options except the first blank one
       select.innerHTML = '<option value="">Select a program</option>';
       programs.forEach(p => {
         const opt = document.createElement('option');
@@ -299,19 +327,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         opt.textContent = p.title;
         select.appendChild(opt);
       });
-      // Always add "Not sure yet" at the bottom
       const notSure = document.createElement('option');
       notSure.value = 'Not sure yet';
       notSure.textContent = 'Not sure yet';
       select.appendChild(notSure);
     }
   } catch (e) {
-    // If Supabase is unreachable, fallback options stay
-    console.warn('Could not load training programs for dropdown:', e);
+    console.warn('Could not load training programs:', e);
   }
 
-  // ── Contact form — submits to Formspree (email) + Supabase (database) ──
-  const FORMSPREE_ID = 'xwvzbzeq'; // ← Replace with your Formspree ID e.g. xyzabc12
+  // ── Contact form ──
+  const FORMSPREE_ID   = 'xwvzbzeq';
+  const JOHN_EMAIL     = 'jd@intentathletics.com';
   const form    = document.getElementById('contact-form');
   const success = document.getElementById('success-msg');
 
@@ -319,8 +346,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const btn = form.querySelector('button[type="submit"]');
 
-    const email = document.getElementById('email').value.trim();
     const fname = document.getElementById('fname').value.trim();
+    const email = document.getElementById('email').value.trim();
 
     if (!fname || !email) {
       success.textContent = 'Please fill in your name and email.';
@@ -334,32 +361,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.textContent = 'Sending…';
     btn.disabled = true;
 
+    // Format phone cleanly before saving — strips to (XXX) XXX-XXXX
+    const rawPhone  = document.getElementById('phone').value.trim();
+    const digits    = rawPhone.replace(/\D/g, '');
+    const phone     = digits.length === 10
+      ? `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+      : rawPhone || 'Not provided';
+
+    const interest = document.getElementById('interest').value || 'Not specified';
+    const goals    = document.getElementById('message').value.trim() || '';
+
     const data = {
       first_name: fname,
       last_name:  document.getElementById('lname').value.trim(),
       email,
-      phone:      document.getElementById('phone').value.trim(),
-      interest:   document.getElementById('interest').value,
-      message:    document.getElementById('message').value.trim()
+      phone,
+      interest,
+      message: goals
     };
 
-    // Send to Formspree (emails John) and Supabase (saves to database) in parallel
-    const [formspreeOk, supabaseOk] = await Promise.allSettled([
+    // Submit to both simultaneously
+    const [formspreeResult, supabaseResult] = await Promise.allSettled([
 
-      // Formspree — sends email to John
+      // ── Formspree — emails John at jd@intentathletics.com ──
       fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
         method: 'POST',
         headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name:    `${data.first_name} ${data.last_name}`.trim(),
-          email:   data.email,
-          phone:   data.phone,
-          program: data.interest,
-          message: data.message
+          _replyto:  email,
+          _subject:  `New inquiry from ${fname} ${data.last_name} — ${interest}`,
+          name:      `${fname} ${data.last_name}`.trim(),
+          email,
+          phone,
+          program:   interest,
+          goals,
+          _to:       JOHN_EMAIL
         })
       }).then(r => r.ok),
 
-      // Supabase — saves to contacts table
+      // ── Supabase — saves full record to contacts table ──
       window.IA_STORE.submitContact(data)
 
     ]);
@@ -367,8 +407,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btn.textContent = 'Send message';
     btn.disabled = false;
 
-    // Succeed if either one worked
-    const sent = formspreeOk.value === true || supabaseOk.value === true;
+    const sent = formspreeResult.value === true || supabaseResult.value === true;
 
     if (sent) {
       success.textContent = 'Message sent — John will be in touch within 1–2 business days.';
