@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact — Intent Athletics</title>
-  <meta name="description" content="Get in touch with John Dunlop at Intent Athletics. Personal training on Farmingdale, NY.">
+  <title>Contact — Personal Trainer in Farmingdale, NY | Intent Athletics</title>
+  <meta name="description" content="Get in touch with John Dunlop at Intent Athletics. Personal trainer in Farmingdale, NY offering strength training, youth athlete training, and semi-private training on Long Island.">
   <link rel="icon" href="images/favicon.ico">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
@@ -129,6 +129,82 @@
       .form-row { grid-template-columns: 1fr; }
     }
   </style>
+  <meta property="og:image" content="https://intentathletics.com/images/og-image.jpg">
+  <meta property="og:url" content="https://intentathletics.com/contact.html">
+  <!-- LocalBusiness Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Intent Athletics",
+    "description": "Personal trainer in Farmingdale, NY offering strength training, youth athlete training, adult training, and semi-private personal training on Long Island.",
+    "url": "https://intentathletics.com",
+    "telephone": "",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Farmingdale",
+      "addressRegion": "NY",
+      "addressCountry": "US"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "40.7326",
+      "longitude": "-73.4454"
+    },
+    "openingHours": "Mo-Sa 06:00-20:00",
+    "priceRange": "$$",
+    "image": "https://intentathletics.com/images/gym.jpg",
+    "sameAs": [
+      "https://www.instagram.com/intentathletics.li/"
+    ],
+    "founder": {
+      "@type": "Person",
+      "name": "John Dunlop",
+      "jobTitle": "Personal Trainer",
+      "description": "Personal trainer in Farmingdale, NY with 15+ years of experience training youth athletes, adults, and competitive athletes on Long Island."
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Training Programs",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Adult Personal Training",
+            "description": "One-on-one personal training in Farmingdale, NY for adults of all fitness levels."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Youth Athlete Training",
+            "description": "Youth athlete training in Farmingdale, NY for ages 7 and up."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Athlete Performance Training",
+            "description": "Strength and conditioning for competitive athletes on Long Island."
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "Semi-Private Training",
+            "description": "Semi-private personal training on Long Island — individualized programs, shared sessions."
+          }
+        }
+      ]
+    }
+  }
+  </script>  <meta property="og:type" content="website">
+  <!-- Get it from search.google.com/search-console → Add property → HTML tag method -->
+  <!-- <meta name="google-site-verification" content="YOUR_VERIFICATION_CODE"> -->
 </head>
 <body>
 <div id="nav-placeholder"></div>
@@ -189,7 +265,7 @@
       </div>
       <div class="info-item">
         <div class="info-label">Merch</div>
-        <div class="info-val"><a href="https://wokeathleletics-fitness.itemorder.com/shop/home/" target="_blank">Intent Athletics store</a></div>
+        <div class="info-val"><a href="merch.html">Intent Athletics merch</a></div>
       </div>
       <div class="info-item">
         <div class="info-label">Response time</div>
@@ -234,7 +310,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.warn('Could not load training programs for dropdown:', e);
   }
 
-  // ── Contact form submission to Supabase ──
+  // ── Contact form — submits to Formspree (email) + Supabase (database) ──
+  const FORMSPREE_ID = 'YOUR_FORM_ID'; // ← Replace with your Formspree ID e.g. xyzabc12
   const form    = document.getElementById('contact-form');
   const success = document.getElementById('success-msg');
 
@@ -242,9 +319,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const btn = form.querySelector('button[type="submit"]');
 
-    // Basic validation
     const email = document.getElementById('email').value.trim();
     const fname = document.getElementById('fname').value.trim();
+
     if (!fname || !email) {
       success.textContent = 'Please fill in your name and email.';
       success.style.background = '#fef2f2';
@@ -266,20 +343,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       message:    document.getElementById('message').value.trim()
     };
 
-    const ok = await window.IA_STORE.submitContact(data);
+    // Send to Formspree (emails John) and Supabase (saves to database) in parallel
+    const [formspreeOk, supabaseOk] = await Promise.allSettled([
+
+      // Formspree — sends email to John
+      fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name:    `${data.first_name} ${data.last_name}`.trim(),
+          email:   data.email,
+          phone:   data.phone,
+          program: data.interest,
+          message: data.message
+        })
+      }).then(r => r.ok),
+
+      // Supabase — saves to contacts table
+      window.IA_STORE.submitContact(data)
+
+    ]);
 
     btn.textContent = 'Send message';
     btn.disabled = false;
 
-    if (ok) {
-      // Reset to green success state
+    // Succeed if either one worked
+    const sent = formspreeOk.value === true || supabaseOk.value === true;
+
+    if (sent) {
       success.textContent = 'Message sent — John will be in touch within 1–2 business days.';
       success.style.background = '#f0f7e8';
       success.style.borderColor = '#c0dfa0';
       success.style.color = '#4a7a14';
       success.style.display = 'block';
       form.reset();
-      // Re-populate dropdown after reset clears it
       select.value = '';
     } else {
       success.textContent = 'Something went wrong — please try again or reach out on Instagram @intentathletics.li';

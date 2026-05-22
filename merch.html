@@ -3,276 +3,153 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Merch — Intent Athletics</title>
-  <meta name="description" content="Intent Athletics merch.">
+  <title>Merch — Intent Athletics | Farmingdale, NY</title>
+  <meta name="description" content="Intent Athletics official merch. Personal training gear from Farmingdale, NY. Coming soon.">
+  <meta property="og:title" content="Merch — Intent Athletics">
+  <meta property="og:description" content="Official Intent Athletics merch. Coming soon.">
+  <meta property="og:image" content="https://intentathletics.com/images/og-image.jpg">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://intentathletics.com/merch.html">
   <link rel="icon" href="images/favicon.ico">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
+
+  <!-- LocalBusiness Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Intent Athletics",
+    "description": "Personal trainer in Farmingdale, NY offering strength training, youth athlete training, adult training, and semi-private personal training on Long Island.",
+    "url": "https://intentathletics.com",
+    "address": { "@type": "PostalAddress", "addressLocality": "Farmingdale", "addressRegion": "NY", "addressCountry": "US" },
+    "image": "https://intentathletics.com/images/gym.jpg",
+    "sameAs": ["https://www.instagram.com/intentathletics.li/"]
+  }
+  </script>
+
   <style>
-    /* ── COMING SOON MODE ── */
+    /* ── COMING SOON ── */
     .merch-soon {
       min-height: calc(100vh - 64px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       text-align: center;
       padding: 5rem 2.5rem;
       background: var(--off);
-      position: relative;
-      overflow: hidden;
+      position: relative; overflow: hidden;
     }
-
     .merch-soon-bg {
       position: absolute;
       font-family: var(--font-display);
       font-size: clamp(120px, 20vw, 260px);
       color: var(--border);
-      white-space: nowrap;
-      pointer-events: none;
-      user-select: none;
-      letter-spacing: -8px;
-      line-height: 1;
-      top: 50%;
-      left: 50%;
+      white-space: nowrap; pointer-events: none;
+      user-select: none; letter-spacing: -8px;
+      line-height: 1; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
     }
-
     .merch-soon-content { position: relative; z-index: 1; max-width: 500px; }
-
     .soon-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--ink);
-      color: var(--white);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 8px 20px;
-      border-radius: var(--radius-pill);
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--ink); color: var(--white);
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 8px 20px; border-radius: var(--radius-pill);
       margin-bottom: 2rem;
     }
-
     .soon-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
+      width: 7px; height: 7px; border-radius: 50%;
       background: #7aba2a;
       animation: blink 2s ease-in-out infinite;
     }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
-    }
-
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
     .merch-soon h1 {
       font-family: var(--font-display);
       font-size: clamp(52px, 8vw, 96px);
-      font-weight: 400;
-      color: var(--ink);
-      line-height: 0.95;
-      margin-bottom: 1.2rem;
+      font-weight: 400; color: var(--ink);
+      line-height: 0.95; margin-bottom: 1.2rem;
     }
     .merch-soon h1 em { font-style: italic; color: var(--ink-3); }
-
     .merch-soon p {
-      font-size: 16px;
-      color: var(--ink-3);
-      line-height: 1.8;
-      margin-bottom: 2.5rem;
-      font-weight: 300;
+      font-size: 16px; color: var(--ink-3);
+      line-height: 1.8; font-weight: 300;
     }
 
-    .notify-form {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      max-width: 400px;
-      margin: 0 auto;
-      flex-wrap: wrap;
-    }
-
-    .notify-input {
-      flex: 1; min-width: 190px;
-      background: var(--white);
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-pill);
-      padding: 11px 20px;
-      font-family: var(--font-body);
-      font-size: 14px; color: var(--ink); outline: none;
-      transition: border-color 0.2s;
-    }
-    .notify-input:focus { border-color: var(--ink-3); }
-    .notify-input::placeholder { color: var(--ink-4); }
-
-    .notify-ok {
-      display: none;
-      font-size: 13px; color: var(--green);
-      margin-top: 1rem; font-weight: 500;
-    }
-
-    /* ── COUNTDOWN MODE ── */
+    /* ── COUNTDOWN ── */
     .merch-countdown {
       min-height: calc(100vh - 64px);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 5rem 2.5rem;
-      background: var(--ink);
-      position: relative;
-      overflow: hidden;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 5rem 2.5rem;
+      background: var(--ink); position: relative; overflow: hidden;
     }
-
     .countdown-bg {
       position: absolute;
       font-family: var(--font-display);
       font-size: clamp(120px, 20vw, 260px);
       color: rgba(255,255,255,0.03);
-      white-space: nowrap;
-      pointer-events: none;
-      letter-spacing: -8px;
-      line-height: 1;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+      white-space: nowrap; pointer-events: none;
+      letter-spacing: -8px; line-height: 1;
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
     }
-
     .countdown-content { position: relative; z-index: 1; max-width: 600px; }
-
     .countdown-eyebrow {
       font-size: 10px; font-weight: 500; letter-spacing: 4px;
-      text-transform: uppercase; color: rgba(255,255,255,0.3);
-      margin-bottom: 1.5rem;
+      text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 1.5rem;
     }
-
     .merch-countdown h1 {
       font-family: var(--font-display);
       font-size: clamp(48px, 7vw, 86px);
-      font-weight: 400;
-      color: var(--white);
-      line-height: 0.95;
-      margin-bottom: 1.2rem;
+      font-weight: 400; color: var(--white);
+      line-height: 0.95; margin-bottom: 1.2rem;
     }
     .merch-countdown h1 em { font-style: italic; color: rgba(255,255,255,0.4); }
-
-    .merch-countdown p {
-      font-size: 16px; color: rgba(255,255,255,0.4);
-      line-height: 1.8; margin-bottom: 3rem; font-weight: 300;
-    }
-
-    .countdown-grid {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-bottom: 3rem;
-    }
-
+    .merch-countdown p { font-size: 16px; color: rgba(255,255,255,0.4); line-height: 1.8; margin-bottom: 3rem; font-weight: 300; }
+    .countdown-grid { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 3rem; }
     .countdown-cell {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 1.5rem 1.8rem;
-      min-width: 100px;
+      border-radius: 16px; padding: 1.5rem 1.8rem; min-width: 100px;
     }
+    .countdown-num { font-family: var(--font-display); font-size: 56px; color: var(--white); line-height: 1; display: block; }
+    .countdown-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-top: 6px; display: block; }
 
-    .countdown-num {
-      font-family: var(--font-display);
-      font-size: 56px;
-      color: var(--white);
-      line-height: 1;
-      display: block;
-    }
-
-    .countdown-label {
-      font-size: 9px; letter-spacing: 3px;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.3);
-      margin-top: 6px;
-      display: block;
-    }
-
-    .btn-light {
-      background: var(--white);
-      color: var(--ink);
-      font-family: var(--font-body);
-      font-size: 13px; font-weight: 600;
-      padding: 13px 30px;
-      border-radius: var(--radius-pill);
-      border: none; cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      transition: background 0.2s;
-    }
-    .btn-light:hover { background: var(--off); }
-
-    /* ── LIVE STORE MODE ── */
+    /* ── LIVE STORE ── */
     .merch-live-header {
       padding: 5rem 2.5rem 4rem;
-      background: var(--off);
-      border-bottom: 1px solid var(--border);
+      background: var(--off); border-bottom: 1px solid var(--border);
     }
     .merch-live-header h1 {
       font-family: var(--font-display);
       font-size: clamp(44px, 6vw, 72px);
-      font-weight: 400; color: var(--ink);
-      line-height: 1.05; margin-bottom: 1rem;
+      font-weight: 400; color: var(--ink); line-height: 1.05; margin-bottom: 1rem;
     }
     .merch-live-header h1 em { font-style: italic; color: var(--ink-3); }
     .merch-live-header p { font-size: 16px; color: var(--ink-3); max-width: 500px; line-height: 1.8; font-weight: 300; }
-
     .merch-grid-section { padding: 5rem 2.5rem; }
-    .merch-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
+    .merch-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
     .merch-card {
-      background: var(--off);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-card);
-      overflow: hidden;
+      background: var(--off); border: 1px solid var(--border);
+      border-radius: var(--radius-card); overflow: hidden;
       transition: border-color 0.2s, transform 0.2s;
     }
     .merch-card:hover { border-color: var(--border-mid); transform: translateY(-2px); }
-
     .merch-card-img {
-      aspect-ratio: 1; overflow: hidden;
-      background: var(--surface);
+      aspect-ratio: 1; overflow: hidden; background: var(--surface);
       display: flex; align-items: center; justify-content: center;
     }
     .merch-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
     .merch-card-body { padding: 1.2rem; }
     .merch-card-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 4px; }
     .merch-card-price { font-size: 13px; color: var(--ink-3); margin-bottom: 8px; }
     .merch-card-btn {
-      display: inline-block;
-      font-size: 11px; font-weight: 500;
+      display: inline-block; font-size: 11px; font-weight: 500;
       color: var(--ink); text-decoration: none;
-      border-bottom: 1px solid var(--border-mid);
-      padding-bottom: 1px;
+      border-bottom: 1px solid var(--border-mid); padding-bottom: 1px;
       transition: border-color 0.2s;
     }
     .merch-card-btn:hover { border-color: var(--ink); }
-
-    .external-strip {
-      padding: 3.5rem 2.5rem;
-      display: flex; align-items: center;
-      justify-content: space-between;
-      gap: 2rem; flex-wrap: wrap;
-      border-top: 1px solid var(--border);
-      background: var(--off);
-    }
-    .external-strip h2 {
-      font-family: var(--font-display);
-      font-size: clamp(20px, 2.5vw, 32px);
-      font-weight: 400; color: var(--ink); margin-bottom: 0.4rem;
-    }
-    .external-strip p { font-size: 14px; color: var(--ink-3); font-weight: 300; max-width: 380px; line-height: 1.7; }
 
     @media(max-width: 900px) {
       .merch-grid { grid-template-columns: repeat(2, 1fr); }
@@ -281,7 +158,6 @@
       .countdown-cell { min-width: 80px; padding: 1.2rem; }
       .countdown-num { font-size: 40px; }
       .merch-live-header, .merch-grid-section { padding: 3rem 1.25rem; }
-      .external-strip { padding: 2.5rem 1.25rem; flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -289,6 +165,7 @@
 <div id="nav-placeholder"></div>
 <main id="merch-main"></main>
 <div id="footer-placeholder"></div>
+
 <script src="js/store.js"></script>
 <script src="js/components.js"></script>
 <script>
@@ -297,17 +174,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const items    = await window.IA_STORE.getMerch();
   const main     = document.getElementById('merch-main');
 
-  // ── MODE: LIVE ──
+  // ── LIVE MODE ──
   if (settings.mode === 'live') {
-    if (items.length === 0) {
-      // Live mode but no items yet — still show store shell
+    if (!items.length) {
       main.innerHTML = `
         <div class="merch-live-header">
           <span class="eyebrow">Merch</span>
           <h1>Intent <em>Athletics</em></h1>
-          <p>Check back soon — items are on the way.</p>
-        </div>
-        ${externalStrip()}`;
+          <p>Items are on the way — check back soon.</p>
+        </div>`;
     } else {
       main.innerHTML = `
         <div class="merch-live-header">
@@ -331,102 +206,60 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
               </div>`).join('')}
           </div>
-        </div>
-        ${externalStrip()}`;
+        </div>`;
     }
     return;
   }
 
-  // ── MODE: RELEASE DATE ──
+  // ── COUNTDOWN MODE ──
   if (settings.mode === 'release_date' && settings.releaseDate) {
+    const label = new Date(settings.releaseDate + 'T00:00:00')
+      .toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
     main.innerHTML = `
       <div class="merch-countdown">
         <div class="countdown-bg">MERCH</div>
         <div class="countdown-content">
           <div class="countdown-eyebrow">Intent Athletics · Dropping Soon</div>
           <h1>Merch<br><em>is coming.</em></h1>
-          <p>The Intent Athletics store launches on ${formatDate(settings.releaseDate)}.</p>
-          <div class="countdown-grid" id="countdown-grid">
+          <p>Launches ${label}.</p>
+          <div class="countdown-grid">
             <div class="countdown-cell"><span class="countdown-num" id="cd-days">--</span><span class="countdown-label">Days</span></div>
             <div class="countdown-cell"><span class="countdown-num" id="cd-hours">--</span><span class="countdown-label">Hours</span></div>
             <div class="countdown-cell"><span class="countdown-num" id="cd-mins">--</span><span class="countdown-label">Minutes</span></div>
             <div class="countdown-cell"><span class="countdown-num" id="cd-secs">--</span><span class="countdown-label">Seconds</span></div>
           </div>
-          <a href="https://wokeathleletics-fitness.itemorder.com/shop/home/" target="_blank" class="btn-light">Visit current store</a>
         </div>
       </div>`;
-    startCountdown(settings.releaseDate);
+
+    function tick() {
+      const diff = new Date(settings.releaseDate + 'T00:00:00').getTime() - Date.now();
+      if (diff <= 0) return;
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      document.getElementById('cd-days').textContent  = d;
+      document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
+      document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
+      document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
+    }
+    tick();
+    setInterval(tick, 1000);
     return;
   }
 
-  // ── MODE: COMING SOON (default) ──
+  // ── COMING SOON (default) ──
   main.innerHTML = `
     <div class="merch-soon">
       <div class="merch-soon-bg">MERCH</div>
       <div class="merch-soon-content">
         <div class="soon-badge"><span class="soon-dot"></span>Coming Soon</div>
         <h1>Intent<br><em>Athletics</em></h1>
-        <p>Merch is on the way. Drop your email and we'll let you know when it's live.</p>
-        <form class="notify-form" id="notify-form">
-          <input type="email" class="notify-input" placeholder="your@email.com" required>
-          <button type="submit" class="btn btn-primary">Notify me</button>
-        </form>
-        <div class="notify-ok" id="notify-ok">You're on the list — we'll be in touch.</div>
-        <p style="margin-top:2.5rem;font-size:13px;">
-          <a href="https://wokeathleletics-fitness.itemorder.com/shop/home/" target="_blank"
-             style="color:var(--ink-4);text-decoration:none;border-bottom:1px solid var(--border-mid);">
-            Shop the current store →
-          </a>
-        </p>
+        <p>Official Intent Athletics merch is on the way. Check back soon.</p>
       </div>
     </div>`;
-
-  document.getElementById('notify-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    this.style.display = 'none';
-    document.getElementById('notify-ok').style.display = 'block';
-  });
 });
-
-function externalStrip() {
-  return `<div class="external-strip">
-    <div>
-      <h2>Current store</h2>
-      <p>The existing Intent Athletics store is still open while the new one is being built.</p>
-    </div>
-    <a href="https://wokeathleletics-fitness.itemorder.com/shop/home/" target="_blank" class="btn btn-outline">Visit store →</a>
-  </div>`;
-}
-
-function formatDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function startCountdown(dateStr) {
-  function tick() {
-    const target = new Date(dateStr + 'T00:00:00').getTime();
-    const now = Date.now();
-    const diff = target - now;
-    if (diff <= 0) {
-      document.getElementById('cd-days').textContent = '0';
-      document.getElementById('cd-hours').textContent = '0';
-      document.getElementById('cd-mins').textContent = '0';
-      document.getElementById('cd-secs').textContent = '0';
-      return;
-    }
-    const d = Math.floor(diff / 86400000);
-    const h = Math.floor((diff % 86400000) / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    document.getElementById('cd-days').textContent  = d;
-    document.getElementById('cd-hours').textContent = String(h).padStart(2,'0');
-    document.getElementById('cd-mins').textContent  = String(m).padStart(2,'0');
-    document.getElementById('cd-secs').textContent  = String(s).padStart(2,'0');
-  }
-  tick();
-  setInterval(tick, 1000);
-}
 </script>
 </body>
 </html>
